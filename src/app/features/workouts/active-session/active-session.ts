@@ -1,5 +1,5 @@
 import { Component, DestroyRef, computed, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Badge } from '../../../shared/components/badge/badge';
 import { StarRating } from '../../../shared/components/star-rating/star-rating';
@@ -8,7 +8,7 @@ import { WorkoutsService } from '../services/workouts.service';
 
 @Component({
   selector: 'app-active-session',
-  imports: [RouterLink, Badge, StarRating],
+  imports: [Badge, StarRating],
   templateUrl: './active-session.html',
   styleUrl: './active-session.scss',
 })

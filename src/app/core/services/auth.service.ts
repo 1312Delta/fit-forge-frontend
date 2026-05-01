@@ -25,6 +25,7 @@ export class AuthService {
     firstName: string;
     lastName: string;
     goalType: string;
+    [key: string]: string | number | null | undefined;
   }) {
     return this.http.post(`${environment.apiUrl}/auth/register`, data);
   }

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -45,7 +46,15 @@ export class Register {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    const payload: Record<string, string | number | null> = {
+    const payload: {
+      username: string;
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      goalType: string;
+      [key: string]: string | number | null | undefined;
+    } = {
       username: this.username,
       email: this.email,
       password: this.password,
@@ -64,7 +73,7 @@ export class Register {
         // Opcional: auto-login o redirigir al login
         this.router.navigate(['/login']);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         if (err.status === 409) {
           this.errorMessage.set('El email o nombre de usuario ya está en uso.');
