@@ -80,6 +80,19 @@
   width: min(100%, 560px);
 }
 
+.r-home {
+  display: inline-flex;
+  color: var(--color-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .r-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -8,6 +8,8 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [FormsModule, RouterLink],
   template: `
     <div class="auth-card">
+      <a routerLink="/" class="auth-home">Volver al inicio</a>
+
       <h1 class="auth-title">Iniciar sesión</h1>
       <p class="auth-subtitle">Accede a tu cuenta de FitForge</p>
 
@@ -66,6 +68,19 @@ import { AuthService } from '../../../core/services/auth.service';
         border: 1px solid var(--color-border);
         border-radius: var(--radius-xl);
         padding: 2.5rem 2rem;
+      }
+
+      .auth-home {
+        display: inline-flex;
+        color: var(--color-primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 1.5rem;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
 
       .auth-title {
