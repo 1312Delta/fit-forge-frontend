@@ -1,0 +1,163 @@
+<div class="l-dashboard-page">
+  <header class="l-dashboard-page__header">
+    <h1 class="c-title">Peso corporal</h1>
+    <p class="c-subtitle">Sigue tu progreso y evolución</p>
+  </header>
+
+  <ng-container *ngIf="!loading(); else loader">
+    <!-- KPIs -->
+    <div class="kpi-grid mb-4">
+      <app-stat-tile
+        label="Peso actual"
+        [value]="kpis().currentWeight ? kpis().currentWeight + ' kg' : '--'"
+        hint="Último registro"
+        tone="primary"
+      >
+      </app-stat-tile>
+      <app-stat-tile
+        label="Cambio total"
+        [value]="
+          kpis().totalChange !== null
+            ? (kpis().totalChange! > 0 ? '+' : '') + (kpis().totalChange | number: '1.1-2') + ' kg'
+            : '--'
+        "
+        hint="Desde el primer pesaje"
+        [tone]="kpis().totalChange !== null && kpis().totalChange! <= 0 ? 'success' : 'danger'"
+      >
+      </app-stat-tile>
+      <app-stat-tile
+        label="Registros"
+        [value]="kpis().totalEntries"
+        hint="Pesajes totales"
+        tone="info"
+      >
+      </app-stat-tile>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Gráfica SVG -->
+      <app-section-card title="Evolución" class="main-card">
+        <div class="chart-container" *ngIf="chartData(); else emptyChart">
+          <svg
+            [attr.viewBox]="chartData()!.viewBox"
+            class="weight-chart"
+            preserveAspectRatio="none"
+          >
+            <!-- Grid lines -->
+            <line x1="40" y1="260" x2="960" y2="260" stroke="var(--border)" stroke-width="1" />
+            <line x1="40" y1="150" x2="960" y2="150" stroke="var(--border)" stroke-width="1" />
+            <line x1="40" y1="40" x2="960" y2="40" stroke="var(--border)" stroke-width="1" />
+
+            <!-- Labels -->
+            <text x="10" y="265" class="chart-label">{{ chartData()!.minW }}kg</text>
+            <text x="10" y="45" class="chart-label">{{ chartData()!.maxW }}kg</text>
+
+            <!-- Line -->
+            <path
+              [attr.d]="chartData()!.dLine"
+              fill="none"
+              stroke="var(--primary)"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <!-- Points -->
+            <g *ngFor="let p of chartData()!.points" class="chart-point-group">
+              <circle
+                [attr.cx]="p.x"
+                [attr.cy]="p.y"
+                r="5"
+                fill="var(--bg-card)"
+                stroke="var(--primary)"
+                stroke-width="2"
+              />
+              <!-- Tooltip (CSS hover based) -->
+              <text [attr.x]="p.x" [attr.y]="p.y - 15" class="chart-tooltip" text-anchor="middle">
+                {{ p.weight }}kg ({{ p.date | date: 'dd/MM' }})
+              </text>
+            </g>
+          </svg>
+        </div>
+        <ng-template #emptyChart>
+          <div class="empty-state">
+            <div class="empty-icon">⚖️</div>
+            <p>Registra tu primer pesaje para ver tu evolución</p>
+          </div>
+        </ng-template>
+      </app-section-card>
+
+      <!-- Formulario & Historial -->
+      <div class="side-column">
+        <app-section-card title="Nuevo pesaje" class="mb-4">
+          <form (ngSubmit)="submitWeight()" #weightForm="ngForm" class="weight-form">
+            <div class="form-group mb-3">
+              <label class="form-label">Peso (kg)</label>
+              <input
+                type="number"
+                class="c-input"
+                [(ngModel)]="newWeight"
+                name="weight"
+                required
+                min="20"
+                max="300"
+                step="0.1"
+                placeholder="Ej: 75.5"
+              />
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Fecha</label>
+              <input type="date" class="c-input" [(ngModel)]="newDate" name="date" required />
+            </div>
+            <div class="form-group mb-4">
+              <label class="form-label">Notas (Opcional)</label>
+              <textarea
+                class="c-input"
+                [(ngModel)]="newNotes"
+                name="notes"
+                rows="2"
+                placeholder="Ej: En ayunas"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              class="c-btn c-btn--primary w-100"
+              [disabled]="!weightForm.form.valid"
+            >
+              Guardar pesaje
+            </button>
+          </form>
+        </app-section-card>
+
+        <app-section-card title="Historial">
+          <div class="history-list" *ngIf="sortedHistoryDesc().length; else emptyHistory">
+            <div class="history-item" *ngFor="let item of sortedHistoryDesc(); let i = index">
+              <div class="hi-info">
+                <strong>{{ item.weightKg }} kg</strong>
+                <span class="hi-date">{{ item.loggedAt | date: 'dd MMM yyyy' }}</span>
+                <span class="hi-notes" *ngIf="item.notes">{{ item.notes }}</span>
+              </div>
+              <div class="hi-diff">
+                <ng-container *ngIf="getDiff(i) as diff">
+                  <app-badge [variant]="diff <= 0 ? 'success' : 'danger'">
+                    {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
+                  </app-badge>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <ng-template #emptyHistory>
+            <p class="text-muted small">Aún no tienes pesajes registrados.</p>
+          </ng-template>
+        </app-section-card>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #loader>
+    <div class="loader-container py-5 text-center">
+      <div class="spinner"></div>
+      <p class="text-muted mt-3">Cargando estadísticas...</p>
+    </div>
+  </ng-template>
+</div>
