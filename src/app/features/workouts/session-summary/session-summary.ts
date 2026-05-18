@@ -1,5 +1,5 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Badge } from '../../../shared/components/badge/badge';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
 import { StarRating } from '../../../shared/components/star-rating/star-rating';
@@ -13,10 +13,11 @@ import { WorkoutsService } from '../services/workouts.service';
   styleUrl: './session-summary.scss',
 })
 export class SessionSummary {
-  readonly id = input<string>('1');
-
   private readonly ws = inject(WorkoutsService);
-  readonly summary = this.ws.getSessionSummary(this.id());
+  private readonly route = inject(ActivatedRoute);
+
+  private readonly sessionId = this.route.snapshot.paramMap.get('id') ?? '1';
+  readonly summary = this.ws.getSessionSummary(this.sessionId);
 
   readonly totalSeries = computed(() =>
     this.summary().exercises.reduce((acc, ex) => acc + ex.sets.length, 0),

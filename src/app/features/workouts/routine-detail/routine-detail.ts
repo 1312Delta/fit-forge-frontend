@@ -1,5 +1,5 @@
-import { Component, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Badge } from '../../../shared/components/badge/badge';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
 import { StatTile } from '../../../shared/components/stat-tile/stat-tile';
@@ -12,10 +12,11 @@ import { WorkoutsService } from '../services/workouts.service';
   styleUrl: './routine-detail.scss',
 })
 export class RoutineDetail {
-  readonly id = input<string>('1');
-
   private readonly ws = inject(WorkoutsService);
-  readonly routine = this.ws.getRoutineById(this.id());
+  private readonly route = inject(ActivatedRoute);
+
+  readonly id = this.route.snapshot.paramMap.get('id') ?? '1';
+  readonly routine = this.ws.getRoutineById(this.id);
 
   levelLabel(level: string): string {
     const map: Record<string, string> = { easy: 'Fácil', mid: 'Medio', hard: 'Duro' };

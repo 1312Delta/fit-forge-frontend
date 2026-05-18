@@ -17,7 +17,7 @@
   </div>
   <a
     [routerLink]="['/workouts/sessions/new']"
-    [queryParams]="{ routineId: id() }"
+    [queryParams]="{ routineId: id }"
     class="btn btn-ff-primary rd-cta-btn"
   >
     ▶ Empezar sesión
@@ -62,7 +62,7 @@
   <a routerLink="/workouts" class="btn btn-ff-secondary">← Volver a rutinas</a>
   <a
     [routerLink]="['/workouts/sessions/new']"
-    [queryParams]="{ routineId: id() }"
+    [queryParams]="{ routineId: id }"
     class="btn btn-ff-primary"
     >▶ Empezar sesión</a
   >

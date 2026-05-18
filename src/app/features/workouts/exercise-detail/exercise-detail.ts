@@ -1,5 +1,5 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Badge } from '../../../shared/components/badge/badge';
 import { MacroRing } from '../../../shared/components/macro-ring/macro-ring';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
@@ -12,10 +12,11 @@ import { WorkoutsService } from '../services/workouts.service';
   styleUrl: './exercise-detail.scss',
 })
 export class ExerciseDetail {
-  readonly id = input<string>('1');
-
   private readonly ws = inject(WorkoutsService);
-  readonly exercise = this.ws.getExerciseById(this.id());
+  private readonly route = inject(ActivatedRoute);
+
+  private readonly exerciseId = this.route.snapshot.paramMap.get('id') ?? '1';
+  readonly exercise = this.ws.getExerciseById(this.exerciseId);
 
   readonly ratingPercent = computed(() => Math.round((this.exercise().avgRating / 5) * 100));
 

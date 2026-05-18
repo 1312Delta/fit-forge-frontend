@@ -49,20 +49,19 @@
           <span class="as-set-num">{{ set.setNumber }}</span>
           <input
             class="as-set-input"
-            type="number"
-            min="0"
+            type="text"
+            inputmode="numeric"
             placeholder="—"
             [value]="set.reps ?? ''"
-            (input)="updateReps(exIdx, setIdx, $any($event.target).value)"
+            (input)="updateReps(exIdx, setIdx, $any($event.target).value, $any($event.target))"
             [disabled]="set.done"
           />
           <input
             class="as-set-input"
-            type="number"
-            min="0"
-            step="0.5"
+            type="text"
+            inputmode="decimal"
             [value]="set.weight"
-            (input)="updateWeight(exIdx, setIdx, $any($event.target).value)"
+            (input)="updateWeight(exIdx, setIdx, $any($event.target).value, $any($event.target))"
             [disabled]="set.done"
           />
           <button

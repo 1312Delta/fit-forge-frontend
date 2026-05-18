@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Badge } from '../../../shared/components/badge/badge';
@@ -22,7 +22,7 @@ export class ActiveSession implements OnInit {
   private readonly sessionData = this.ws.getActiveSession(this.routineId);
 
   readonly routineName = computed(() => this.sessionData().routineName);
-  readonly exercises = signal<ActiveExercise[]>(structuredClone(this.sessionData().exercises));
+  readonly exercises = signal<ActiveExercise[]>([]);
 
   readonly elapsedSec = signal(0);
   readonly sessionId = signal<number | null>(null);
@@ -61,21 +61,30 @@ export class ActiveSession implements OnInit {
   constructor() {
     const interval = setInterval(() => this.elapsedSec.update((s) => s + 1), 1000);
     this.destroyRef.onDestroy(() => clearInterval(interval));
+
+    effect(() => {
+      const exs = this.sessionData().exercises;
+      if (exs.length > 0) this.exercises.set(structuredClone(exs));
+    });
   }
 
   ngOnInit() {
     const rId = this.routineId ? parseInt(this.routineId, 10) : undefined;
     this.ws.createSession(rId).subscribe({
-      next: (res) => this.sessionId.set(res.id),
-      error: (err) => console.error('Failed to create session in backend:', err),
+      next: (res) => {
+        console.log('[WS] createSession', res);
+        this.sessionId.set(res.id);
+      },
+      error: (err) => console.error('[WS] createSession FAILED', err),
     });
   }
 
   async finishSession() {
     const sId = this.sessionId();
     if (!sId) {
-      console.warn('No session ID available to save. Navigating to summary fallback.');
-      this.router.navigate(['/workouts/sessions/1/summary']);
+      alert(
+        'La sesión aún no se ha registrado en el servidor. Espera un momento e inténtalo de nuevo.',
+      );
       return;
     }
 
@@ -133,18 +142,23 @@ export class ActiveSession implements OnInit {
     });
   }
 
-  updateReps(exIdx: number, setIdx: number, value: string) {
+  updateReps(exIdx: number, setIdx: number, value: string, inputEl: HTMLInputElement) {
+    const sanitized = value.replace(/[^0-9]/g, '');
+    const num = sanitized === '' ? null : parseInt(sanitized, 10);
+    inputEl.value = num === null ? '' : String(num);
     this.exercises.update((exs) => {
       const clone = structuredClone(exs);
-      clone[exIdx].sets[setIdx].reps = value === '' ? null : Number(value);
+      clone[exIdx].sets[setIdx].reps = num;
       return clone;
     });
   }
 
-  updateWeight(exIdx: number, setIdx: number, value: string) {
+  updateWeight(exIdx: number, setIdx: number, value: string, inputEl: HTMLInputElement) {
+    const sanitized = value.replace(/[^0-9.]/g, '').replace(/^0+(\d)/, '$1');
+    inputEl.value = sanitized;
     this.exercises.update((exs) => {
       const clone = structuredClone(exs);
-      clone[exIdx].sets[setIdx].weight = value;
+      clone[exIdx].sets[setIdx].weight = sanitized;
       return clone;
     });
   }
