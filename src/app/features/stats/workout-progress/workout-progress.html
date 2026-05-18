@@ -1,0 +1,113 @@
+<div class="l-dashboard-page">
+  <header class="l-dashboard-page__header">
+    <h1 class="c-title">Progreso de entrenamientos</h1>
+    <p class="c-subtitle">Tus estadísticas y constancia en el gimnasio</p>
+  </header>
+
+  <ng-container *ngIf="!loading(); else loader">
+    <!-- KPIs -->
+    <div class="kpi-grid mb-4">
+      <app-stat-tile
+        label="Sesiones totales"
+        [value]="kpis().totalSessions"
+        hint="Desde el inicio"
+        tone="primary"
+      >
+      </app-stat-tile>
+      <app-stat-tile
+        label="Duración media"
+        [value]="kpis().avgDurationMin !== null ? kpis().avgDurationMin + ' min' : '--'"
+        hint="Por entrenamiento"
+        tone="info"
+      >
+      </app-stat-tile>
+      <app-stat-tile
+        label="Esta semana"
+        [value]="kpis().sessionsThisWeek"
+        hint="Sesiones completadas"
+        tone="success"
+      >
+      </app-stat-tile>
+      <app-stat-tile
+        label="Racha actual"
+        [value]="kpis().currentStreak"
+        hint="Días consecutivos"
+        tone="warning"
+      >
+      </app-stat-tile>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Izquierda: Actividad y Feelings -->
+      <div class="left-col">
+        <app-section-card title="Actividad semanal" class="mb-4">
+          <div class="activity-bars">
+            <div class="bar-col" *ngFor="let bar of activityBars()">
+              <div class="bar-bg">
+                <div class="bar-fill" [class.active]="bar.active" [class.today]="bar.isToday"></div>
+              </div>
+              <span class="bar-label" [class.today-label]="bar.isToday">{{ bar.label }}</span>
+            </div>
+          </div>
+          <div class="empty-hint" *ngIf="kpis().sessionsThisWeek === 0">
+            <p>Empieza a entrenar esta semana para llenar las barras.</p>
+          </div>
+        </app-section-card>
+
+        <app-section-card title="Distribución de sensaciones">
+          <div class="feelings-list" *ngIf="feelingStats(); else emptyFeelings">
+            <div class="feeling-row" *ngFor="let f of feelingStats()">
+              <div class="f-label">
+                <span>{{ f.label }}</span>
+                <span>{{ f.count }}</span>
+              </div>
+              <div class="f-track">
+                <div class="f-fill" [style.width.%]="f.percent" [style.background]="f.color"></div>
+              </div>
+            </div>
+          </div>
+          <ng-template #emptyFeelings>
+            <div class="empty-state-small">
+              <div class="empty-icon">🎭</div>
+              <p>Las sensaciones se registran al finalizar cada entrenamiento</p>
+            </div>
+          </ng-template>
+        </app-section-card>
+      </div>
+
+      <!-- Derecha: Historial reciente -->
+      <div class="right-col">
+        <app-section-card title="Historial reciente (últimas 10)">
+          <div class="history-list" *ngIf="sortedHistoryDesc().length; else emptyHistory">
+            <div class="history-item" *ngFor="let item of sortedHistoryDesc()">
+              <div class="hi-icon">
+                {{ getFeelingEmoji(item.generalFeeling) }}
+              </div>
+              <div class="hi-info">
+                <strong>Sesión completada</strong>
+                <span class="hi-date">{{ item.startedAt | date: 'dd MMM yyyy, HH:mm' }}</span>
+              </div>
+              <div class="hi-stats">
+                <span *ngIf="item.durationMin">{{ item.durationMin }} min</span>
+                <span *ngIf="item.exerciseCount">{{ item.exerciseCount }} ej</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #emptyHistory>
+            <div class="empty-state-small">
+              <div class="empty-icon">🏋️‍♂️</div>
+              <p>Aún no has completado ningún entrenamiento</p>
+            </div>
+          </ng-template>
+        </app-section-card>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #loader>
+    <div class="loader-container py-5 text-center">
+      <div class="spinner"></div>
+      <p class="text-muted mt-3">Cargando estadísticas...</p>
+    </div>
+  </ng-template>
+</div>
