@@ -1,0 +1,78 @@
+<section class="l-page">
+  <aside class="l-info">
+    <div class="l-info-inner">
+      <a routerLink="/" class="l-brand">FitForge</a>
+
+      <div class="l-copy">
+        <h1 class="l-title">Tu progreso,<br />tu historia</h1>
+        <p class="l-subtitle">Accede a tus rutinas, tus métricas y tu seguimiento diario.</p>
+      </div>
+
+      <ul class="l-benefits">
+        <li>Rutinas predefinidas por objetivo</li>
+        <li>Tracking de series, reps y peso</li>
+        <li>Valoración 1-5 por ejercicio y comida</li>
+        <li>Recomendaciones dinámicas con IA</li>
+        <li>Seguimiento de dieta y macros</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="l-form-side">
+    <div class="l-form-wrap">
+      <a routerLink="/" class="l-home">Volver al inicio</a>
+
+      <div class="l-tabs" aria-label="Acceso a FitForge">
+        <a routerLink="/login" class="active" aria-current="page">Iniciar sesión</a>
+        <a routerLink="/register">Crear cuenta</a>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="l-error">{{ errorMessage() }}</div>
+      }
+
+      <form class="l-form" (ngSubmit)="onSubmit()">
+        <div class="l-field">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            [(ngModel)]="email"
+            type="email"
+            autocomplete="email"
+            placeholder="tu@email.com"
+            required
+          />
+        </div>
+
+        <div class="l-field">
+          <label for="password">Contraseña</label>
+          <input
+            id="password"
+            name="password"
+            [(ngModel)]="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+
+        <a class="l-forgot" routerLink="/forgot-password">¿Olvidaste tu contraseña?</a>
+
+        <button type="submit" class="l-submit" [disabled]="loading()">
+          @if (loading()) {
+            Entrando...
+          } @else {
+            Entrar
+          }
+        </button>
+      </form>
+
+      <p class="l-register">
+        ¿No tienes cuenta?
+        <a routerLink="/register">Regístrate gratis</a>
+      </p>
+    </div>
+  </main>
+</section>
