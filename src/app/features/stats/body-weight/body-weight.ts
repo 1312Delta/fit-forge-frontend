@@ -45,7 +45,7 @@ export class BodyWeight implements OnInit {
     const lastDate = new Date(sorted[sorted.length - 1].loggedAt).getTime();
     const rangeTime = lastDate - firstDate || 1;
 
-    const points = sorted.map((d, i) => {
+    const points = sorted.map((d) => {
       const time = new Date(d.loggedAt).getTime();
       const x = padding + ((time - firstDate) / rangeTime) * (w - padding * 2);
 
@@ -67,7 +67,6 @@ export class BodyWeight implements OnInit {
   });
 
   ngOnInit() {
-    // If empty we can refresh
     if (!this.history().length) {
       this.statsService.refreshAll();
     }

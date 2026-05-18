@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { StatsService } from '../services/stats.service';
 import { StatTile } from '../../../shared/components/stat-tile/stat-tile';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
-import { Badge } from '../../../shared/components/badge/badge';
 
 @Component({
   selector: 'app-workout-progress',
   standalone: true,
-  imports: [CommonModule, StatTile, SectionCard, Badge],
+  imports: [CommonModule, StatTile, SectionCard],
   templateUrl: './workout-progress.html',
   styleUrl: './workout-progress.scss',
 })
@@ -30,7 +29,6 @@ export class WorkoutProgress implements OnInit {
     const bars = [];
     const today = new Date();
 
-    // Normalize today for timezone local
     const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const dayOfWeek = localToday.getDay();
@@ -70,30 +68,30 @@ export class WorkoutProgress implements OnInit {
       {
         key: 'great',
         label: 'Excelente',
-        color: 'var(--stars)',
-        count: dist.great || 0,
-        percent: ((dist.great || 0) / totalWithFeeling) * 100,
+        color: 'var(--color-stars)',
+        count: dist['great'] || 0,
+        percent: ((dist['great'] || 0) / totalWithFeeling) * 100,
       },
       {
         key: 'good',
         label: 'Bien',
-        color: 'var(--success)',
-        count: dist.good || 0,
-        percent: ((dist.good || 0) / totalWithFeeling) * 100,
+        color: 'var(--color-primary)',
+        count: dist['good'] || 0,
+        percent: ((dist['good'] || 0) / totalWithFeeling) * 100,
       },
       {
         key: 'regular',
         label: 'Regular',
-        color: 'var(--warning)',
-        count: dist.regular || 0,
-        percent: ((dist.regular || 0) / totalWithFeeling) * 100,
+        color: 'var(--color-mid)',
+        count: dist['regular'] || 0,
+        percent: ((dist['regular'] || 0) / totalWithFeeling) * 100,
       },
       {
         key: 'bad',
         label: 'Mal',
-        color: 'var(--danger)',
-        count: dist.bad || 0,
-        percent: ((dist.bad || 0) / totalWithFeeling) * 100,
+        color: 'var(--color-danger)',
+        count: dist['bad'] || 0,
+        percent: ((dist['bad'] || 0) / totalWithFeeling) * 100,
       },
     ].filter((s) => s.count > 0);
   });
