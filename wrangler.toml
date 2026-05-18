@@ -1,0 +1,3 @@
+name = "fitforge"
+compatibility_date = "2025-05-18"
+pages_build_output_dir = "dist/fitforge/browser"
