@@ -10,7 +10,7 @@
     "lint": "ng lint",
     "format": "prettier --write \"src/**/*.{ts,html,scss}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
-    "prepare": "husky",
+    "prepare": "node -e \"if(process.env.CI !== 'true' && require('fs').existsSync('.git')) { require('child_process').execSync('husky', {stdio: 'inherit'}) }\"",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev"
   },
