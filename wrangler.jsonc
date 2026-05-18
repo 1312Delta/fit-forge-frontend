@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "fit-forge-frontend",
+  "name": "fit-forge",
   "compatibility_date": "2026-05-18",
   "observability": {
     "enabled": true
