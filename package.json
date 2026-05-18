@@ -10,10 +10,14 @@
     "lint": "ng lint",
     "format": "prettier --write \"src/**/*.{ts,html,scss}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "deploy": "npm run build && wrangler deploy",
+    "preview": "npm run build && wrangler dev"
   },
   "lint-staged": {
-    "src/**/*.{ts,html,scss}": ["prettier --write"]
+    "src/**/*.{ts,html,scss}": [
+      "prettier --write"
+    ]
   },
   "prettier": {
     "printWidth": 100,
@@ -52,6 +56,7 @@
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "~5.9.2",
-    "typescript-eslint": "8.56.1"
+    "typescript-eslint": "8.56.1",
+    "wrangler": "^4.92.0"
   }
 }
