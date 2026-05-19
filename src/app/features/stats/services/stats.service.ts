@@ -25,6 +25,10 @@ export class StatsService {
 
   readonly loading = signal<boolean>(false);
 
+  // -- User body data --
+  private readonly userHeightCmSig = signal<number | null>(null);
+  readonly userHeightCm = this.userHeightCmSig.asReadonly();
+
   // -- Computed KPIs --
   readonly weightKpis = computed<WeightKpis>(() => {
     const history = this.weightHistory();
@@ -131,6 +135,28 @@ export class StatsService {
     this.workoutHistorySig.set([]);
     this.loadAllWeightHistory(1);
     this.loadAllWorkoutHistory(1);
+    this.loadUserHeight();
+  }
+
+  private loadUserHeight(): void {
+    this.http
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .get<any>(`${environment.apiUrl}/users/me`)
+      .subscribe({
+        next: (user) => {
+          if (user?.heightCm) {
+            this.userHeightCmSig.set(Number(user.heightCm));
+          }
+        },
+      });
+  }
+
+  updateUserHeight(heightCm: number): Observable<unknown> {
+    return this.http.put(`${environment.apiUrl}/users/me`, { heightCm }).pipe(
+      tap(() => {
+        this.userHeightCmSig.set(heightCm);
+      }),
+    );
   }
 
   private loadAllWeightHistory(page = 1): void {
