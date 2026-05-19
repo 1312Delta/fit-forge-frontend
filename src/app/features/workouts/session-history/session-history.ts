@@ -77,6 +77,20 @@ export class SessionHistory {
     });
   }
 
+  toggleCompleted(day: { dayKey: string; completed: boolean }): void {
+    this.saving.set(true);
+    this.ws.setDayCompleted(day.dayKey, !day.completed).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showToast(day.completed ? 'Marcado como no completado' : 'Marcado como completado');
+      },
+      error: () => {
+        this.saving.set(false);
+        this.showToast('Error al guardar');
+      },
+    });
+  }
+
   clearRoutine(): void {
     const day = this.selectedDay();
     if (!day) return;

@@ -278,7 +278,7 @@ export class WorkoutsService {
   private sessionHistorySig = signal<SessionHistoryItem[]>([]);
   private routinesSig = signal<Routine[]>([]);
   private scheduleSig = signal<ScheduledDay[]>([]);
-  private scheduleRaw: Record<string, { id: number; name: string } | null> = {};
+  private scheduleRaw: Record<string, { id: number; name: string; completed: boolean } | null> = {};
   private routineDetailCache = new Map<string, ReturnType<typeof signal<RoutineDetail>>>();
   private sessionSummaryCache = new Map<string, ReturnType<typeof signal<SessionSummaryData>>>();
 
@@ -306,9 +306,9 @@ export class WorkoutsService {
 
   private loadSchedule() {
     this.http
-      .get<{ data: Record<string, { routineId: number; name: string } | null> }>(
-        `${environment.apiUrl}/users/me/schedule`,
-      )
+      .get<{
+        data: Record<string, { routineId: number; name: string; completed?: boolean } | null>;
+      }>(`${environment.apiUrl}/users/me/schedule`)
       .pipe(
         catchError((err) => {
           console.error('[WS] getSchedule ERROR', err);
@@ -316,9 +316,12 @@ export class WorkoutsService {
         }),
       )
       .subscribe(({ data }) => {
-        const normalized: Record<string, { id: number; name: string } | null> = {};
+        const normalized: Record<string, { id: number; name: string; completed: boolean } | null> =
+          {};
         for (const [day, val] of Object.entries(data ?? {})) {
-          normalized[day] = val ? { id: val.routineId, name: val.name } : null;
+          normalized[day] = val
+            ? { id: val.routineId, name: val.name, completed: val.completed ?? false }
+            : null;
         }
         this.scheduleRaw = normalized;
         this.scheduleSig.set(this.buildWeek(normalized));
@@ -504,10 +507,26 @@ export class WorkoutsService {
   assignRoutineToDay(routineId: number, day: string, routineName: string) {
     return this.http.put(`${environment.apiUrl}/users/me/schedule/${day}`, { routineId }).pipe(
       tap(() => {
-        this.scheduleRaw = { ...this.scheduleRaw, [day]: { id: routineId, name: routineName } };
+        this.scheduleRaw = {
+          ...this.scheduleRaw,
+          [day]: { id: routineId, name: routineName, completed: false },
+        };
         this.scheduleSig.set(this.buildWeek(this.scheduleRaw));
       }),
     );
+  }
+
+  setDayCompleted(day: string, completed: boolean) {
+    const current = this.scheduleRaw[day];
+    if (!current) return of(null as unknown as object);
+    return this.http
+      .put(`${environment.apiUrl}/users/me/schedule/${day}`, { routineId: current.id, completed })
+      .pipe(
+        tap(() => {
+          this.scheduleRaw = { ...this.scheduleRaw, [day]: { ...current, completed } };
+          this.scheduleSig.set(this.buildWeek(this.scheduleRaw));
+        }),
+      );
   }
 
   clearDaySchedule(day: string) {
@@ -633,7 +652,9 @@ export class WorkoutsService {
     return this.scheduleSig;
   }
 
-  private buildWeek(schedule: Record<string, { id: number; name: string } | null>): ScheduledDay[] {
+  private buildWeek(
+    schedule: Record<string, { id: number; name: string; completed: boolean } | null>,
+  ): ScheduledDay[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -652,19 +673,13 @@ export class WorkoutsService {
       { label: 'Dom', key: 'sunday' },
     ];
 
-    const completedDaysAgo = new Set(this.sessionHistorySig().map((s) => s.daysAgo));
-
     return days.map(({ label, key }, i) => {
       const date = new Date(monday);
       date.setDate(monday.getDate() + i);
 
       const apiRoutine = schedule[key] ?? null;
       const routine = apiRoutine ? { id: apiRoutine.id.toString(), name: apiRoutine.name } : null;
-
-      const diffMs = today.getTime() - date.getTime();
-      const daysAgo = Math.round(diffMs / 86_400_000);
-      const isPast = daysAgo > 0;
-      const completed = routine !== null && isPast && completedDaysAgo.has(daysAgo);
+      const completed = apiRoutine?.completed ?? false;
 
       return {
         dayLabel: label,

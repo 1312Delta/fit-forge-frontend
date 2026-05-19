@@ -71,6 +71,14 @@
           <button
             class="btn btn-ff-secondary"
             [disabled]="saving()"
+            (click)="toggleCompleted(day)"
+            type="button"
+          >
+            {{ day.completed ? '✓ Completado' : 'Marcar completado' }}
+          </button>
+          <button
+            class="btn btn-ff-secondary"
+            [disabled]="saving()"
             (click)="clearRoutine()"
             type="button"
           >
