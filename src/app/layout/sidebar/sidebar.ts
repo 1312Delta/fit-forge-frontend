@@ -38,7 +38,6 @@ import { DashboardService } from '../../core/services/dashboard.service';
       >
         <span class="sb-icon">🏋️</span>
         Entrenamientos
-        <span class="sb-badge">3</span>
       </a>
       <a routerLink="/workouts/history" routerLinkActive="sb-active" class="sb-link">
         <span class="sb-icon">📋</span>

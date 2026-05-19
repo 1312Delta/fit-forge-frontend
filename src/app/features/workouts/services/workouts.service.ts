@@ -296,7 +296,6 @@ export class WorkoutsService {
         }),
       )
       .subscribe((routines) => {
-        console.log('[WS] getRoutines', routines);
         this.routinesSig.set(routines);
       });
   }
@@ -330,7 +329,6 @@ export class WorkoutsService {
           }),
         )
         .subscribe((r) => {
-          console.log('[WS] getRoutineById', r);
           if (r) sig.set(apiRoutineToDetail(r));
         });
     }
@@ -349,7 +347,6 @@ export class WorkoutsService {
         }),
       )
       .subscribe((exercises) => {
-        console.log('[WS] getExercises', exercises);
         sig.set(exercises);
       });
     return sig;
@@ -377,7 +374,6 @@ export class WorkoutsService {
         }),
       )
       .subscribe((r) => {
-        console.log('[WS] getExerciseById', r);
         if (r) sig.set(apiExerciseDetailToExerciseDetail(r));
       });
     return sig;
@@ -391,7 +387,6 @@ export class WorkoutsService {
         .get<ApiRoutine>(`${environment.apiUrl}/routines/${routineId}`)
         .pipe(catchError(() => of(null)))
         .subscribe((r) => {
-          console.log('[WS] getActiveSession (routine)', r);
           if (!r) return;
           const detail = apiRoutineToDetail(r);
           sig.set({
@@ -437,7 +432,6 @@ export class WorkoutsService {
           }),
         )
         .subscribe((r) => {
-          console.log('[WS] getSessionSummary', r);
           if (r) sig.set(apiWorkoutDetailToSummary(r));
         });
     }
@@ -459,7 +453,6 @@ export class WorkoutsService {
         }),
       )
       .subscribe((res) => {
-        console.log('[WS] loadSessionHistory', res);
         if (res.data) {
           const mapped: SessionHistoryItem[] = res.data.map((d) => ({
             id: d.id.toString(),
@@ -557,7 +550,6 @@ export class WorkoutsService {
       .get<ApiStats>(`${environment.apiUrl}/users/me/stats?topExercises=10`)
       .pipe(catchError(() => of(null)))
       .subscribe((r) => {
-        console.log('[WS] getProgressKpis / getExerciseProgress (stats)', r);
         if (!r) return;
         const topRecord = r.personalRecords[0];
         sig.set([
@@ -601,7 +593,6 @@ export class WorkoutsService {
       .get<ApiRoutine>(`${environment.apiUrl}/users/me/routine`)
       .pipe(catchError(() => of(null)))
       .subscribe((r) => {
-        console.log('[WS] getWeeklySchedule (my routine)', r);
         sig.set(this.buildWeek(r ? { id: r.id.toString(), name: r.name } : null));
       });
 
