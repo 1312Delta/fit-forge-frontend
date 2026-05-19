@@ -1,32 +1,36 @@
-export interface Ingredient {
-  id?: string | number;
-  name: string;
-  amount: string; // e.g., '100g', '2 tazas'
-  calories?: number;
-}
+// Frontend view model for the daily nutrition screen.
+// The backend exposes diet meals (/api/diets/{id}) and diet logs
+// (/api/diet-logs) separately — this shape composes them for the UI.
 
-export interface Meal {
-  id: string | number;
-  type: string; // e.g., 'breakfast', 'lunch', 'snack', 'dinner'
+export interface DailyMealItem {
+  id: number; // meal id from the diet
   name: string;
-  time?: string;
+  time: string | null;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  ingredients?: Ingredient[];
-  completed?: boolean;
+  fiber: number;
+  foods: {
+    id: number;
+    name: string;
+    amount: string; // e.g. "150g"
+    calories: number;
+  }[];
+  completed: boolean;
+  // Local id of the MealLog created on POST /diet-logs/{id}/meals, when marked this session.
+  mealLogId: number | null;
 }
 
 export interface DailyNutritionProgress {
-  date: string; // ISO format or string representation
+  date: string;
   targetCalories: number;
   consumedCalories: number;
-  targetProtein: number;
+  targetProtein: number | null;
   consumedProtein: number;
-  targetCarbs: number;
+  targetCarbs: number | null;
   consumedCarbs: number;
-  targetFat: number;
+  targetFat: number | null;
   consumedFat: number;
-  meals: Meal[];
+  meals: DailyMealItem[];
 }
