@@ -54,19 +54,29 @@
             <span class="sh-detail-category">{{ routine.category }}</span>
           </div>
         </div>
-        @if (day.completed) {
-          <button class="btn btn-ff-primary sh-btn-completed" disabled type="button">
-            ✓ Completado
-          </button>
-        } @else {
-          <a
-            class="btn btn-ff-primary"
-            [routerLink]="['/workouts/sessions/new']"
-            [queryParams]="{ routineId: day.routine.id }"
+        <div class="sh-detail-actions">
+          @if (day.completed) {
+            <button class="btn btn-ff-primary sh-btn-completed" disabled type="button">
+              ✓ Completado
+            </button>
+          } @else {
+            <a
+              class="btn btn-ff-primary"
+              [routerLink]="['/workouts/sessions/new']"
+              [queryParams]="{ routineId: day.routine.id }"
+            >
+              ▶ Comenzar
+            </a>
+          }
+          <button
+            class="btn btn-ff-secondary"
+            [disabled]="saving()"
+            (click)="clearRoutine()"
+            type="button"
           >
-            ▶ Comenzar sesión
-          </a>
-        }
+            Quitar rutina
+          </button>
+        </div>
       </div>
 
       <p class="sh-detail-desc">{{ routine.description }}</p>
@@ -93,9 +103,76 @@
           <strong>Día de descanso</strong>
           <p>El cuerpo también necesita recuperarse. Descansa y vuelve con más energía.</p>
         </div>
+        <button
+          class="btn btn-ff-secondary"
+          [disabled]="saving()"
+          (click)="openRoutinePicker()"
+          type="button"
+        >
+          + Asignar rutina
+        </button>
       </div>
+      @if (showRoutinePicker()) {
+        <div class="sh-routine-picker">
+          @for (r of routines(); track r.id) {
+            <div
+              class="sh-routine-pick-item"
+              [class.sh-routine-pick-item--open]="previewRoutineId() === r.id"
+            >
+              <button
+                class="sh-routine-pick-btn"
+                [disabled]="saving()"
+                (click)="selectPreview(r.id)"
+                type="button"
+              >
+                <div class="sh-pick-row">
+                  <div>
+                    <span class="sh-pick-name">{{ r.name }}</span>
+                    <span class="sh-pick-meta">
+                      {{ r.category }}
+                      @if (routineDetail(r.id)().exerciseCount > 0) {
+                        · {{ routineDetail(r.id)().exerciseCount }} ejercicios
+                      }
+                    </span>
+                  </div>
+                  <span class="sh-pick-chevron">{{ previewRoutineId() === r.id ? '▲' : '▼' }}</span>
+                </div>
+              </button>
+
+              @if (previewRoutineId() === r.id && routineDetail(r.id)(); as detail) {
+                <div class="sh-pick-preview">
+                  @if (detail.description) {
+                    <p class="sh-pick-desc">{{ detail.description }}</p>
+                  }
+                  <ul class="sh-pick-exercises">
+                    @for (ex of detail.exercises; track ex.exerciseId; let i = $index) {
+                      <li class="sh-pick-ex">
+                        <span class="sh-pick-ex-num">{{ i + 1 }}</span>
+                        <span class="sh-pick-ex-name">{{ ex.name }}</span>
+                        <span class="sh-pick-ex-sets">{{ ex.sets }} × {{ ex.reps }}</span>
+                      </li>
+                    }
+                  </ul>
+                  <button
+                    class="btn btn-ff-primary sh-pick-confirm"
+                    [disabled]="saving()"
+                    (click)="assignRoutine(r.id, r.name)"
+                    type="button"
+                  >
+                    Asignar esta rutina
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
     }
   </div>
+}
+
+@if (toast()) {
+  <div class="sh-toast">{{ toast() }}</div>
 }
 
 <!-- ── FILTROS HISTORIAL ────────────────────────────────────────── -->

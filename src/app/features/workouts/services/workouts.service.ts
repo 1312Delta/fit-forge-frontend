@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, map, of } from 'rxjs';
+import { catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BadgeVariant } from '../../../shared/components/badge/badge';
 import {
@@ -277,12 +277,16 @@ export class WorkoutsService {
   private readonly http = inject(HttpClient);
   private sessionHistorySig = signal<SessionHistoryItem[]>([]);
   private routinesSig = signal<Routine[]>([]);
+  private scheduleSig = signal<ScheduledDay[]>([]);
+  private scheduleRaw: Record<string, { id: number; name: string } | null> = {};
   private routineDetailCache = new Map<string, ReturnType<typeof signal<RoutineDetail>>>();
   private sessionSummaryCache = new Map<string, ReturnType<typeof signal<SessionSummaryData>>>();
 
   constructor() {
+    console.log('[WS] WorkoutsService constructor');
     this.loadSessionHistory();
     this.loadRoutines();
+    this.loadSchedule();
   }
 
   private loadRoutines() {
@@ -297,6 +301,27 @@ export class WorkoutsService {
       )
       .subscribe((routines) => {
         this.routinesSig.set(routines);
+      });
+  }
+
+  private loadSchedule() {
+    this.http
+      .get<{ data: Record<string, { routineId: number; name: string } | null> }>(
+        `${environment.apiUrl}/users/me/schedule`,
+      )
+      .pipe(
+        catchError((err) => {
+          console.error('[WS] getSchedule ERROR', err);
+          return of({ data: {} });
+        }),
+      )
+      .subscribe(({ data }) => {
+        const normalized: Record<string, { id: number; name: string } | null> = {};
+        for (const [day, val] of Object.entries(data ?? {})) {
+          normalized[day] = val ? { id: val.routineId, name: val.name } : null;
+        }
+        this.scheduleRaw = normalized;
+        this.scheduleSig.set(this.buildWeek(normalized));
       });
   }
 
@@ -476,6 +501,24 @@ export class WorkoutsService {
       });
   }
 
+  assignRoutineToDay(routineId: number, day: string, routineName: string) {
+    return this.http.put(`${environment.apiUrl}/users/me/schedule/${day}`, { routineId }).pipe(
+      tap(() => {
+        this.scheduleRaw = { ...this.scheduleRaw, [day]: { id: routineId, name: routineName } };
+        this.scheduleSig.set(this.buildWeek(this.scheduleRaw));
+      }),
+    );
+  }
+
+  clearDaySchedule(day: string) {
+    return this.http.delete(`${environment.apiUrl}/users/me/schedule/${day}`).pipe(
+      tap(() => {
+        this.scheduleRaw = { ...this.scheduleRaw, [day]: null };
+        this.scheduleSig.set(this.buildWeek(this.scheduleRaw));
+      }),
+    );
+  }
+
   createSession(routineId?: number, notes?: string) {
     return this.http.post<{ id: number; startedAt: string }>(`${environment.apiUrl}/workouts`, {
       routineId,
@@ -586,20 +629,11 @@ export class WorkoutsService {
     return sig;
   }
 
-  getWeeklySchedule(): ReturnType<typeof signal<ScheduledDay[]>> {
-    const sig = signal<ScheduledDay[]>(this.buildWeek(null));
-
-    this.http
-      .get<ApiRoutine>(`${environment.apiUrl}/users/me/routine`)
-      .pipe(catchError(() => of(null)))
-      .subscribe((r) => {
-        sig.set(this.buildWeek(r ? { id: r.id.toString(), name: r.name } : null));
-      });
-
-    return sig;
+  getWeeklySchedule() {
+    return this.scheduleSig;
   }
 
-  private buildWeek(activeRoutine: { id: string; name: string } | null): ScheduledDay[] {
+  private buildWeek(schedule: Record<string, { id: number; name: string } | null>): ScheduledDay[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -608,30 +642,37 @@ export class WorkoutsService {
     const monday = new Date(today);
     monday.setDate(today.getDate() + diffToMonday);
 
-    const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const days = [
+      { label: 'Lun', key: 'monday' },
+      { label: 'Mar', key: 'tuesday' },
+      { label: 'Mié', key: 'wednesday' },
+      { label: 'Jue', key: 'thursday' },
+      { label: 'Vie', key: 'friday' },
+      { label: 'Sáb', key: 'saturday' },
+      { label: 'Dom', key: 'sunday' },
+    ];
 
-    // Días completados a partir del historial real
     const completedDaysAgo = new Set(this.sessionHistorySig().map((s) => s.daysAgo));
 
-    return dayLabels.map((label, i) => {
+    return days.map(({ label, key }, i) => {
       const date = new Date(monday);
       date.setDate(monday.getDate() + i);
-      const isoDay = (i + 1) % 7;
-      const jsDay = isoDay === 0 ? 0 : isoDay;
-      // Si hay rutina asignada, todos los días laborables (Lun-Vie) son de entrenamiento
-      const isTraining = activeRoutine !== null && jsDay >= 1 && jsDay <= 5;
+
+      const apiRoutine = schedule[key] ?? null;
+      const routine = apiRoutine ? { id: apiRoutine.id.toString(), name: apiRoutine.name } : null;
 
       const diffMs = today.getTime() - date.getTime();
       const daysAgo = Math.round(diffMs / 86_400_000);
       const isPast = daysAgo > 0;
-      const completed = isTraining && isPast && completedDaysAgo.has(daysAgo);
+      const completed = routine !== null && isPast && completedDaysAgo.has(daysAgo);
 
       return {
         dayLabel: label,
+        dayKey: key,
         date,
-        routine: isTraining ? activeRoutine : null,
+        routine,
         isToday: date.getTime() === today.getTime(),
-        isRest: !isTraining,
+        isRest: routine === null,
         completed,
       };
     });

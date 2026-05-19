@@ -119,6 +119,7 @@ export interface SessionHistoryItem {
 
 export interface ScheduledDay {
   dayLabel: string;
+  dayKey: string;
   date: Date;
   routine: { id: string; name: string } | null;
   isToday: boolean;

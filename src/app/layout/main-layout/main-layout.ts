@@ -1,6 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { Sidebar } from '../sidebar/sidebar';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -97,12 +99,12 @@ import { Sidebar } from '../sidebar/sidebar';
             <!-- User -->
             <div class="mob-divider"></div>
             <div class="mob-user">
-              <div class="mob-avatar">JD</div>
+              <div class="mob-avatar">{{ initials() }}</div>
               <div>
-                <div class="mob-user-name">Juan David</div>
-                <div class="mob-user-goal">Ganar músculo</div>
+                <div class="mob-user-name">{{ displayName() }}</div>
               </div>
             </div>
+            <button class="mob-logout" (click)="auth.logout()">↩ Cerrar sesión</button>
           </nav>
         </div>
 
@@ -307,14 +309,32 @@ import { Sidebar } from '../sidebar/sidebar';
         color: var(--color-text);
       }
 
-      .mob-user-goal {
-        font-size: 0.75rem;
+      .mob-logout {
+        margin-top: 0.75rem;
+        width: 100%;
+        padding: 0.5rem 0;
+        background: transparent;
+        border: none;
+        text-align: left;
+        font-size: 0.9rem;
         color: var(--color-text-muted);
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+
+      .mob-logout:hover {
+        color: var(--color-danger, #e53935);
       }
     `,
   ],
 })
 export class MainLayout {
+  protected auth = inject(AuthService);
+  private readonly ds = inject(DashboardService);
+  private readonly greeting = this.ds.getGreeting();
+  readonly displayName = computed(() => this.greeting().userName);
+  readonly initials = computed(() => this.displayName().slice(0, 2).toUpperCase());
+
   mobileOpen = signal(false);
 
   toggleMobile() {

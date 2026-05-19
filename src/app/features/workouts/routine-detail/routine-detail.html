@@ -15,14 +15,42 @@
     <h1 class="rd-title">{{ routine().name }}</h1>
     <p class="rd-meta">Por {{ routine().author }} · Actualizada el {{ routine().lastUpdated }}</p>
   </div>
-  <a
-    [routerLink]="['/workouts/sessions/new']"
-    [queryParams]="{ routineId: id }"
-    class="btn btn-ff-primary rd-cta-btn"
-  >
-    ▶ Empezar sesión
-  </a>
+  <div class="rd-header-actions">
+    <div class="rd-day-picker-wrapper">
+      <button class="btn btn-ff-secondary rd-cta-btn" (click)="showDayPicker.set(!showDayPicker())">
+        📅 Asignar a día
+      </button>
+      @if (showDayPicker()) {
+        <div class="rd-day-picker">
+          @for (day of days; track day.key) {
+            <button
+              class="rd-day-btn"
+              [class.rd-day-btn--active]="isAssigned(day.key)"
+              [disabled]="saving()"
+              (click)="toggleDay(day.key)"
+            >
+              @if (isAssigned(day.key)) {
+                ✓
+              }
+              {{ day.label }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+    <a
+      [routerLink]="['/workouts/sessions/new']"
+      [queryParams]="{ routineId: id }"
+      class="btn btn-ff-primary rd-cta-btn"
+    >
+      ▶ Empezar sesión
+    </a>
+  </div>
 </header>
+
+@if (toast()) {
+  <div class="rd-success-toast">{{ toast() }}</div>
+}
 
 <!-- ── STATS ───────────────────────────────────────────────────── -->
 <section class="rd-stats">
