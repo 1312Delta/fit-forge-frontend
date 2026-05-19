@@ -3,14 +3,14 @@ import { RouterLink } from '@angular/router';
 import { Badge } from '../../../shared/components/badge/badge';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
 import { StarRating } from '../../../shared/components/star-rating/star-rating';
-import { StatTile } from '../../../shared/components/stat-tile/stat-tile';
+
 import { WorkoutsService } from '../services/workouts.service';
 
 type RangeFilter = 'week' | 'month' | 'all';
 
 @Component({
   selector: 'app-session-history',
-  imports: [RouterLink, StatTile, SectionCard, StarRating, Badge],
+  imports: [RouterLink, SectionCard, StarRating, Badge],
   templateUrl: './session-history.html',
   styleUrl: './session-history.scss',
 })

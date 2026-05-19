@@ -1,0 +1,133 @@
+<div class="l-dashboard-page">
+  <header class="l-dashboard-page__header">
+    <h1 class="c-title">Progreso de entrenamientos</h1>
+    <p class="c-subtitle">Tus estadísticas y constancia en el gimnasio</p>
+  </header>
+
+  @if (!loading()) {
+    <!-- KPIs -->
+    <div class="kpi-grid mb-4">
+      <ff-stat-tile
+        label="Sesiones totales"
+        [value]="kpis().totalSessions"
+        hint="Desde el inicio"
+        tone="primary"
+      >
+      </ff-stat-tile>
+      <ff-stat-tile
+        label="Duración media"
+        [value]="kpis().avgDurationMin !== null ? kpis().avgDurationMin + ' min' : '--'"
+        hint="Por entrenamiento"
+        tone="info"
+      >
+      </ff-stat-tile>
+      <ff-stat-tile
+        label="Esta semana"
+        [value]="kpis().sessionsThisWeek"
+        hint="Sesiones completadas"
+        tone="primary"
+      >
+      </ff-stat-tile>
+      <ff-stat-tile
+        label="Racha actual"
+        [value]="kpis().currentStreak"
+        hint="Días consecutivos"
+        tone="stars"
+      >
+      </ff-stat-tile>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Izquierda: Actividad y Feelings -->
+      <div class="left-col">
+        <ff-section-card title="Actividad semanal" class="mb-4">
+          <div class="activity-bars">
+            @for (bar of activityBars(); track bar.label) {
+              <div class="bar-col">
+                <div class="bar-bg">
+                  <div
+                    class="bar-fill"
+                    [class.active]="bar.active"
+                    [class.today]="bar.isToday"
+                  ></div>
+                </div>
+                <span class="bar-label" [class.today-label]="bar.isToday">{{ bar.label }}</span>
+              </div>
+            }
+          </div>
+          @if (kpis().sessionsThisWeek === 0) {
+            <div class="empty-hint">
+              <p>Empieza a entrenar esta semana para llenar las barras.</p>
+            </div>
+          }
+        </ff-section-card>
+
+        <ff-section-card title="Distribución de sensaciones">
+          @if (feelingStats()) {
+            <div class="feelings-list">
+              @for (f of feelingStats(); track f.key) {
+                <div class="feeling-row">
+                  <div class="f-label">
+                    <span>{{ f.label }}</span>
+                    <span>{{ f.count }}</span>
+                  </div>
+                  <div class="f-track">
+                    <div
+                      class="f-fill"
+                      [style.width.%]="f.percent"
+                      [style.background]="f.color"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state-small">
+              <div class="empty-icon">🎭</div>
+              <p>Las sensaciones se registran al finalizar cada entrenamiento</p>
+            </div>
+          }
+        </ff-section-card>
+      </div>
+
+      <!-- Derecha: Historial reciente -->
+      <div class="right-col">
+        <ff-section-card title="Historial reciente (últimas 10)">
+          @if (sortedHistoryDesc().length) {
+            <div class="history-list">
+              @for (item of sortedHistoryDesc(); track item.id) {
+                <div class="history-item">
+                  <div class="hi-icon">
+                    {{ getFeelingEmoji(item.generalFeeling) }}
+                  </div>
+                  <div class="hi-info">
+                    <strong>Sesión completada</strong>
+                    <span class="hi-date">{{ item.startedAt | date: 'dd MMM yyyy, HH:mm' }}</span>
+                  </div>
+                  <div class="hi-stats">
+                    @if (item.durationMin) {
+                      <span>{{ item.durationMin }} min</span>
+                    }
+                    @if (item.exerciseCount) {
+                      <span>{{ item.exerciseCount }} ej</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state-small">
+              <div class="empty-icon">🏋️‍♂️</div>
+              <p>Aún no has completado ningún entrenamiento</p>
+            </div>
+          }
+        </ff-section-card>
+      </div>
+    </div>
+  } @else {
+    <div class="loader-container py-5 text-center">
+      <div class="spinner"></div>
+      <p class="text-muted mt-3">Cargando estadísticas...</p>
+    </div>
+  }
+</div>
