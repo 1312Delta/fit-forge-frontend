@@ -34,7 +34,66 @@
       </ff-stat-tile>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Layout Superior: Formulario Izquierda | Gráfica Derecha -->
+    <div class="dashboard-grid mb-4">
+      <!-- Formulario Lateral -->
+      <div class="side-column">
+        <ff-section-card title="Nuevo pesaje" class="h-100 form-card">
+          <form (ngSubmit)="submitWeight()" #weightForm="ngForm" class="weight-form">
+            <div class="form-group mb-3">
+              <label class="form-label" for="weight-input">Peso (kg)</label>
+              <div class="input-with-suffix">
+                <input
+                  id="weight-input"
+                  type="number"
+                  class="c-input fw-bold"
+                  [(ngModel)]="newWeight"
+                  name="weight"
+                  required
+                  min="20"
+                  max="300"
+                  step="0.1"
+                  placeholder="Ej: 75.5"
+                />
+                <span class="suffix">kg</span>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label" for="date-input">Fecha</label>
+              <input
+                type="date"
+                id="date-input"
+                class="c-input"
+                [(ngModel)]="newDate"
+                name="date"
+                required
+              />
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label" for="notes-input">Notas (Opcional)</label>
+              <textarea
+                id="notes-input"
+                class="c-input"
+                [(ngModel)]="newNotes"
+                name="notes"
+                rows="2"
+                placeholder="Ej: En ayunas, post entreno..."
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              class="c-btn c-btn--primary w-100 mt-auto"
+              [disabled]="!weightForm.form.valid"
+            >
+              Guardar pesaje
+            </button>
+          </form>
+        </ff-section-card>
+      </div>
+
       <!-- Gráfica SVG -->
       <ff-section-card title="Evolución" class="main-card">
         @if (chartData()) {
@@ -82,19 +141,19 @@
                 stroke-width="3"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                class="chart-path"
               />
 
               <!-- Points -->
               @for (p of chartData()!.points; track p.date) {
-                <g class="chart-point-group">
-                  <circle
-                    [attr.cx]="p.x"
-                    [attr.cy]="p.y"
-                    r="5"
-                    fill="var(--color-surface)"
-                    stroke="var(--color-primary)"
-                    stroke-width="2"
-                  />
+                <g
+                  class="chart-point-group"
+                  [class.highlighted]="highlightedEntryId() === p.id"
+                  [class.dimmed]="highlightedEntryId() !== null && highlightedEntryId() !== p.id"
+                  (mouseenter)="highlightedEntryId.set(p.id)"
+                  (mouseleave)="highlightedEntryId.set(null)"
+                >
+                  <circle [attr.cx]="p.x" [attr.cy]="p.y" class="chart-circle" />
                   <text
                     [attr.x]="p.x"
                     [attr.y]="p.y - 15"
@@ -114,86 +173,46 @@
           </div>
         }
       </ff-section-card>
-
-      <!-- Formulario & Historial -->
-      <div class="side-column">
-        <ff-section-card title="Nuevo pesaje" class="mb-4">
-          <form (ngSubmit)="submitWeight()" #weightForm="ngForm" class="weight-form">
-            <div class="form-group mb-3">
-              <label class="form-label" for="weight-input">Peso (kg)</label>
-              <input
-                id="weight-input"
-                type="number"
-                class="c-input"
-                [(ngModel)]="newWeight"
-                name="weight"
-                required
-                min="20"
-                max="300"
-                step="0.1"
-                placeholder="Ej: 75.5"
-              />
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label" for="date-input">Fecha</label>
-              <input
-                type="date"
-                id="date-input"
-                class="c-input"
-                [(ngModel)]="newDate"
-                name="date"
-                required
-              />
-            </div>
-            <div class="form-group mb-4">
-              <label class="form-label" for="notes-input">Notas (Opcional)</label>
-              <textarea
-                id="notes-input"
-                class="c-input"
-                [(ngModel)]="newNotes"
-                name="notes"
-                rows="2"
-                placeholder="Ej: En ayunas"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              class="c-btn c-btn--primary w-100"
-              [disabled]="!weightForm.form.valid"
-            >
-              Guardar pesaje
-            </button>
-          </form>
-        </ff-section-card>
-
-        <ff-section-card title="Historial">
-          @if (sortedHistoryDesc().length) {
-            <div class="history-list">
-              @for (item of sortedHistoryDesc(); track item.id; let i = $index) {
-                <div class="history-item">
-                  <div class="hi-info">
-                    <strong>{{ item.weightKg }} kg</strong>
-                    <span class="hi-date">{{ item.loggedAt | date: 'dd MMM yyyy' }}</span>
-                    @if (item.notes) {
-                      <span class="hi-notes">{{ item.notes }}</span>
-                    }
-                  </div>
-                  <div class="hi-diff">
-                    @if (getDiff(i); as diff) {
-                      <ff-badge [variant]="diff <= 0 ? 'easy' : 'hard'">
-                        {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
-                      </ff-badge>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="text-muted small">Aún no tienes pesajes registrados.</p>
-          }
-        </ff-section-card>
-      </div>
     </div>
+
+    <!-- Historial Horizontal Inferior -->
+    <ff-section-card title="Historial Completo">
+      @if (sortedHistoryDesc().length) {
+        <div class="history-horizontal-list">
+          @for (item of sortedHistoryDesc(); track item.id; let i = $index) {
+            <div
+              class="history-card"
+              [class.highlighted]="highlightedEntryId() === item.id"
+              (mouseenter)="highlightedEntryId.set(item.id)"
+              (mouseleave)="highlightedEntryId.set(null)"
+            >
+              <div class="hc-header">
+                <strong class="hc-weight">{{ item.weightKg }} kg</strong>
+                <div class="hc-diff">
+                  @if (getDiff(i); as diff) {
+                    <ff-badge [variant]="diff <= 0 ? 'easy' : 'hard'">
+                      {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
+                    </ff-badge>
+                  } @else {
+                    <span class="hc-diff-empty">--</span>
+                  }
+                </div>
+              </div>
+              <div class="hc-body">
+                <span class="hc-date"
+                  ><span class="icon">📅</span> {{ item.loggedAt | date: 'dd MMM yyyy' }}</span
+                >
+                @if (item.notes) {
+                  <span class="hc-notes"><span class="icon">📝</span> {{ item.notes }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-muted small py-3">Aún no tienes pesajes registrados.</p>
+      }
+    </ff-section-card>
   } @else {
     <div class="loader-container py-5 text-center">
       <div class="spinner"></div>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StatsService } from '../services/stats.service';
@@ -23,6 +23,8 @@ export class BodyWeight implements OnInit {
   newWeight = '';
   newDate = new Date().toISOString().split('T')[0];
   newNotes = '';
+
+  highlightedEntryId = signal<number | null>(null);
 
   readonly chartData = computed(() => {
     const data = this.history();
@@ -52,7 +54,7 @@ export class BodyWeight implements OnInit {
       const finalX = sorted.length === 1 ? w / 2 : x;
       const finalY = h - padding - ((Number(d.weightKg) - minW) / rangeW) * (h - padding * 2);
 
-      return { x: finalX, y: finalY, date: d.loggedAt, weight: Number(d.weightKg) };
+      return { id: d.id, x: finalX, y: finalY, date: d.loggedAt, weight: Number(d.weightKg) };
     });
 
     const dLine = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
