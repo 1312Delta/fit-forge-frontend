@@ -23,7 +23,12 @@ import { DashboardService } from '../../core/services/dashboard.service';
         <span class="sb-icon">⊞</span>
         Dashboard
       </a>
-      <a routerLink="/stats" routerLinkActive="sb-active" class="sb-link">
+      <a
+        routerLink="/stats"
+        routerLinkActive="sb-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="sb-link"
+      >
         <span class="sb-icon">📈</span>
         Estadísticas
       </a>

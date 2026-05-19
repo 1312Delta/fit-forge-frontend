@@ -97,9 +97,7 @@ export class WorkoutProgress implements OnInit {
   });
 
   ngOnInit() {
-    if (!this.history().length) {
-      this.statsService.refreshAll();
-    }
+    this.statsService.refreshAll();
   }
 
   getFeelingEmoji(feeling: string | null): string {
