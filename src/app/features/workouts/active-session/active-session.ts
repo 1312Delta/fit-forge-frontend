@@ -8,7 +8,7 @@ import { WorkoutsService } from '../services/workouts.service';
 
 @Component({
   selector: 'app-active-session',
-  imports: [RouterLink, Badge, StarRating],
+  imports: [Badge, StarRating],
   templateUrl: './active-session.html',
   styleUrl: './active-session.scss',
 })

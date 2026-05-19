@@ -3,13 +3,6 @@
   <div class="l-container d-flex align-items-center justify-content-between py-3">
     <a routerLink="/" (click)="scrollToTop()" class="l-brand">FitForge</a>
 
-    <!-- Desktop nav -->
-    <nav class="l-nav-desktop d-flex align-items-center gap-4">
-      <a routerLink="/workouts" class="l-nav-link">Entrenamientos</a>
-      <a routerLink="/nutrition" class="l-nav-link">Dietas</a>
-      <a routerLink="/stats" class="l-nav-link">Estadísticas</a>
-    </nav>
-
     <div class="d-flex gap-2 align-items-center">
       <a routerLink="/login" class="btn l-btn-ghost l-nav-auth">Iniciar sesión</a>
       <a routerLink="/register" class="btn l-btn-solid l-nav-auth">Registrarse</a>
@@ -22,9 +15,6 @@
 
   <!-- Mobile nav -->
   <nav class="l-mobile-nav" [class.is-open]="menuOpen">
-    <a routerLink="/workouts" (click)="menuOpen = false">Entrenamientos</a>
-    <a routerLink="/nutrition" (click)="menuOpen = false">Dietas</a>
-    <a routerLink="/stats" (click)="menuOpen = false">Estadísticas</a>
     <a routerLink="/login" (click)="menuOpen = false">Iniciar sesión</a>
     <a routerLink="/register" (click)="menuOpen = false">Registrarse</a>
   </nav>
@@ -33,81 +23,20 @@
 <!-- ── HERO ───────────────────────────────────────────────── -->
 <section class="l-hero">
   <div class="l-container">
-    <div class="l-hero-row">
-      <!-- Left -->
-      <div class="l-hero-left">
+    <div class="l-hero-row justify-content-center text-center">
+      <!-- Content -->
+      <div class="l-hero-left" style="flex: 0 1 600px">
         <span class="l-pill mb-4 d-inline-block">TU COMPAÑERO DE FITNESS</span>
         <h1 class="l-hero-title">
           Entrena mejor,<br />
           <span class="l-accent">progresa más</span>
         </h1>
-        <p class="l-hero-sub">
+        <p class="l-hero-sub mx-auto">
           Registra tus entrenamientos, sigue tu dieta y recibe recomendaciones personalizadas
           basadas en tu rendimiento real.
         </p>
-        <div class="d-flex gap-3 flex-wrap">
+        <div class="d-flex gap-3 flex-wrap justify-content-center">
           <a routerLink="/register" class="btn l-btn-white">Comenzar gratis</a>
-          <a routerLink="/login" class="btn l-btn-outline-white">Ver demo</a>
-        </div>
-      </div>
-
-      <!-- Right — Dashboard mock -->
-      <div class="l-hero-right">
-        <div class="l-mock">
-          <!-- Top stats -->
-          <div class="l-mock-stats">
-            <div class="l-mock-stat">
-              <div class="l-mock-val">87kg</div>
-              <div class="l-mock-lbl">Peso actual</div>
-            </div>
-            <div class="l-mock-divider"></div>
-            <div class="l-mock-stat">
-              <div class="l-mock-val l-accent">2.340</div>
-              <div class="l-mock-lbl">Kcal hoy</div>
-            </div>
-            <div class="l-mock-divider"></div>
-            <div class="l-mock-stat">
-              <div class="l-mock-val">14</div>
-              <div class="l-mock-lbl">Sesiones</div>
-            </div>
-          </div>
-
-          <!-- Weekly chart -->
-          <div class="l-mock-section-title">PROGRESO SEMANAL</div>
-          <div class="l-chart">
-            <div class="l-bar" style="height: 55%"></div>
-            <div class="l-bar" style="height: 40%"></div>
-            <div class="l-bar" style="height: 70%"></div>
-            <div class="l-bar" style="height: 45%"></div>
-            <div class="l-bar" style="height: 85%"></div>
-            <div class="l-bar" style="height: 60%"></div>
-            <div class="l-bar l-bar--dim" style="height: 20%"></div>
-          </div>
-          <div class="l-chart-labels">
-            <span>Lun</span><span>Mar</span><span>Mié</span> <span>Jue</span><span>Vie</span
-            ><span>Sáb</span><span>Dom</span>
-          </div>
-
-          <!-- Last session -->
-          <div class="l-mock-section-title mt-3">ÚLTIMA SESIÓN</div>
-          <div class="l-exercise-row">
-            <span class="l-ex-dot" style="background: #1d9e75"></span>
-            <span class="l-ex-name">Press de banca</span>
-            <span class="l-stars">★★★★★</span>
-            <span class="l-badge l-badge--easy">Fácil</span>
-          </div>
-          <div class="l-exercise-row">
-            <span class="l-ex-dot" style="background: #ef9f27"></span>
-            <span class="l-ex-name">Sentadilla</span>
-            <span class="l-stars">★★★★☆</span>
-            <span class="l-badge l-badge--mid">Medio</span>
-          </div>
-          <div class="l-exercise-row">
-            <span class="l-ex-dot" style="background: #e24b4a"></span>
-            <span class="l-ex-name">Peso muerto</span>
-            <span class="l-stars">★★★☆☆</span>
-            <span class="l-badge l-badge--hard">Duro</span>
-          </div>
         </div>
       </div>
     </div>
@@ -397,7 +326,6 @@
     </p>
     <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
       <a routerLink="/register" class="btn l-btn-outline-white px-5">Crear cuenta gratis</a>
-      <a routerLink="/login" class="btn l-btn-text">Ver cómo funciona</a>
     </div>
   </div>
 </section>
