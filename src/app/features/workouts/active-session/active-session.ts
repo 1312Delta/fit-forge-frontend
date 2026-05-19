@@ -1,5 +1,5 @@
 import { Component, DestroyRef, computed, effect, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Badge } from '../../../shared/components/badge/badge';
 import { StarRating } from '../../../shared/components/star-rating/star-rating';

@@ -6,6 +6,14 @@
           <span class="visually-hidden">Cargando...</span>
         </div>
       </div>
+    } @else if (error()) {
+      <button class="back-btn mb-4" (click)="goBack()">
+        <i class="bi bi-chevron-left me-1"></i> Volver a dietas
+      </button>
+      <div class="alert alert-danger shadow-sm rounded-3 border-0">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ error() }}
+      </div>
     } @else if (diet()) {
       <!-- Back -->
       <button class="back-btn mb-4" (click)="goBack()">
@@ -15,89 +23,104 @@
       <!-- Hero Card -->
       <div class="hero-card mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-          <!-- Left -->
           <div class="flex-grow-1">
-            <!-- Badges -->
             <div class="d-flex flex-wrap gap-2 mb-3">
-              <span class="badge-pill badge-category">{{ diet()!.category }}</span>
+              @if (diet()!.goalType) {
+                <span class="badge-pill badge-category">{{ goalLabel(diet()!.goalType) }}</span>
+              }
               <span class="badge-pill badge-meals">
-                <i class="bi bi-clock me-1"></i>{{ diet()!.mealsList?.length || 4 }} comidas/día
+                <i class="bi bi-clock me-1"></i>{{ diet()!.meals.length }} comidas
               </span>
-              @if (diet()!.id === 'current-assigned') {
+              @if (diet()!.assigned) {
                 <span class="badge-pill badge-assigned">
                   <i class="bi bi-check2 me-1"></i>Tu dieta actual
                 </span>
               }
             </div>
 
-            <h1 class="diet-main-title">{{ diet()!.title }}</h1>
+            <h1 class="diet-main-title">{{ diet()!.name }}</h1>
             <p class="diet-main-desc">{{ diet()!.description }}</p>
 
-            <!-- Stats row -->
             <div class="stats-row">
+              @if (diet()!.dailyKcal) {
+                <div class="stat-item">
+                  <div class="stat-value text-primary-green">
+                    {{ diet()!.dailyKcal | number }}
+                  </div>
+                  <div class="stat-label">KCAL/DÍA</div>
+                </div>
+              }
               <div class="stat-item">
                 <div class="stat-value text-primary-green">
-                  {{ diet()!.totalCalories | number }}
+                  {{ dietTotals().protein | number: '1.0-0' }}g
                 </div>
-                <div class="stat-label">KCAL/DÍA</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value text-primary-green">{{ diet()!.protein || 0 }}g</div>
                 <div class="stat-label">PROTEÍNA</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value text-primary-green">{{ diet()!.carbs || 0 }}g</div>
+                <div class="stat-value text-primary-green">
+                  {{ dietTotals().carbs | number: '1.0-0' }}g
+                </div>
                 <div class="stat-label">CARBOS</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value text-primary-green">{{ diet()!.fat || 0 }}g</div>
+                <div class="stat-value text-primary-green">
+                  {{ dietTotals().fat | number: '1.0-0' }}g
+                </div>
                 <div class="stat-label">GRASAS</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value text-primary-green">4.7</div>
-                <div class="stat-label">VALORACIÓN</div>
+                <div class="stat-value text-primary-green">{{ diet()!.meals.length }}</div>
+                <div class="stat-label">COMIDAS</div>
               </div>
             </div>
           </div>
 
-          <!-- Right: CTA -->
           <div class="d-flex flex-column align-items-end gap-2">
-            @if (diet()!.id === 'current-assigned') {
+            @if (diet()!.assigned) {
               <span class="badge-pill badge-assigned-lg">Asignada actualmente</span>
+            } @else {
+              <button class="btn-change-diet" [disabled]="assigning()" (click)="assignDiet()">
+                {{ assigning() ? 'Asignando…' : 'Asignar esta dieta' }}
+              </button>
             }
-            <button class="btn-change-diet" (click)="selectDiet()">Cambiar dieta</button>
           </div>
         </div>
       </div>
 
       <!-- Main content -->
       <div class="row g-4">
-        <!-- Left: Day selector + Meals -->
         <div class="col-12 col-lg-8">
           <!-- Day selector -->
           <div class="day-selector mb-4">
-            @for (day of days; track day) {
+            @for (day of days; track day.value) {
               <button
                 class="day-btn"
-                [class.active]="selectedDay() === day"
-                (click)="selectedDay.set(day)"
+                [class.active]="selectedDayIndex() === day.value"
+                (click)="selectedDayIndex.set(day.value)"
               >
-                {{ day }}
+                {{ day.label }}
               </button>
             }
           </div>
 
-          <!-- Meals table -->
-          @for (meal of getMealsForDay(); track meal.name) {
+          @if (mealsForSelectedDay().length === 0) {
+            <div class="text-center py-4 empty-state">
+              <p class="text-muted-light mb-0">Sin comidas configuradas para este día.</p>
+            </div>
+          }
+
+          @for (meal of mealsForSelectedDay(); track meal.id) {
             <div class="meal-section mb-4">
               <div class="meal-section-header">
                 <div>
                   <span class="meal-section-name">{{ meal.name }}</span>
-                  <span class="meal-section-time text-muted-light">{{ meal.time }}</span>
+                  @if (meal.mealTime) {
+                    <span class="meal-section-time text-muted-light">{{ meal.mealTime }}</span>
+                  }
                 </div>
-                <span class="meal-section-calories text-primary-green fw-bold"
-                  >{{ meal.totalCalories }} kcal</span
-                >
+                <span class="meal-section-calories text-primary-green fw-bold">
+                  {{ mealTotals(meal).kcal | number: '1.0-0' }} kcal
+                </span>
               </div>
 
               <table class="food-table">
@@ -109,22 +132,31 @@
                     <th>PROT.</th>
                     <th>CARBOS</th>
                     <th>GRASAS</th>
-                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (food of meal.foods; track food.name) {
+                  @for (mf of meal.foods; track mf.id) {
                     <tr>
                       <td>
-                        <span class="food-dot" [class]="food.dotClass"></span>
-                        {{ food.name }}
+                        <span class="food-dot dot-green"></span>
+                        {{ mf.food.name }}
+                        @if (mf.food.brand) {
+                          <small class="text-muted-light"> · {{ mf.food.brand }}</small>
+                        }
                       </td>
-                      <td class="text-muted-light">{{ food.amount }}</td>
-                      <td class="text-white">{{ food.kcal }}</td>
-                      <td class="text-muted-light">{{ food.protein }}g</td>
-                      <td class="text-muted-light">{{ food.carbs }}g</td>
-                      <td class="text-muted-light">{{ food.fat }}g</td>
-                      <td><a class="ver-link" href="#">Ver →</a></td>
+                      <td class="text-muted-light">{{ mf.quantityG }}g</td>
+                      <td class="text-white">
+                        {{ foodKcal(mf.food, mf.quantityG) | number: '1.0-0' }}
+                      </td>
+                      <td class="text-muted-light">
+                        {{ foodMacro(mf.food.proteinG, mf.quantityG) | number: '1.0-0' }}g
+                      </td>
+                      <td class="text-muted-light">
+                        {{ foodMacro(mf.food.carbsG, mf.quantityG) | number: '1.0-0' }}g
+                      </td>
+                      <td class="text-muted-light">
+                        {{ foodMacro(mf.food.fatG, mf.quantityG) | number: '1.0-0' }}g
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -133,73 +165,37 @@
           }
         </div>
 
-        <!-- Right Sidebar -->
         <div class="col-12 col-lg-4">
-          <!-- Macros diarios -->
+          <!-- Macros del día -->
           <div class="sidebar-card mb-4">
-            <h6 class="sidebar-label">MACROS DIARIOS</h6>
-            <div class="macro-row-sm mb-2">
+            <h6 class="sidebar-label">MACROS DEL DÍA</h6>
+            <div class="d-flex justify-content-between mb-2">
               <span class="text-muted-light">Proteína</span>
-              <div class="micro-bar fill-protein"></div>
+              <span class="text-white">{{ dietTotals().protein | number: '1.0-0' }}g</span>
             </div>
-            <div class="macro-row-sm mb-2">
-              <span class="text-muted-light">Carbos</span>
-              <div class="micro-bar fill-carbs"></div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted-light">Carbohidratos</span>
+              <span class="text-white">{{ dietTotals().carbs | number: '1.0-0' }}g</span>
             </div>
-            <div class="macro-row-sm mb-2">
+            <div class="d-flex justify-content-between mb-2">
               <span class="text-muted-light">Grasas</span>
-              <div class="micro-bar fill-fat"></div>
+              <span class="text-white">{{ dietTotals().fat | number: '1.0-0' }}g</span>
             </div>
-            <div class="macro-row-sm mb-4">
+            <div class="d-flex justify-content-between mb-3">
               <span class="text-muted-light">Fibra</span>
-              <div class="micro-bar fill-fiber"></div>
+              <span class="text-white">{{ dietTotals().fiber | number: '1.0-0' }}g</span>
             </div>
-            <div class="total-calories-display">
-              <span class="text-primary-green display-6 fw-bold">2.111</span>
-              <span class="text-muted-light small ms-2">total del plan</span>
+            <div class="total-calories-display border-top border-dark pt-3">
+              <span class="text-primary-green display-6 fw-bold">
+                {{ dietTotals().kcal | number: '1.0-0' }}
+              </span>
+              <span class="text-muted-light small ms-2">kcal del día</span>
             </div>
-          </div>
-
-          <!-- Valoraciones -->
-          <div class="sidebar-card mb-4">
-            <h6 class="sidebar-label">TUS VALORACIONES</h6>
-            <div class="valuation-row">
-              <span class="text-muted-light">Disfrute medio</span>
-              <div class="star-row">
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star text-warning"></i>
+            @if (diet()!.dailyKcal) {
+              <div class="text-muted-light small mt-2">
+                Objetivo del plan: {{ diet()!.dailyKcal | number }} kcal/día
               </div>
-            </div>
-            <div class="valuation-row">
-              <span class="text-muted-light">Saciedad media</span>
-              <div class="star-row">
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-fill text-warning"></i>
-                <i class="bi bi-star-half text-warning"></i>
-              </div>
-            </div>
-            <div class="valuation-row">
-              <span class="text-muted-light">Días registrados</span>
-              <span class="text-white fw-bold">32</span>
-            </div>
-            <div class="valuation-row">
-              <span class="text-muted-light">Adherencia</span>
-              <span class="text-primary-green fw-bold">91%</span>
-            </div>
-          </div>
-
-          <!-- AI Sugerencia -->
-          <div class="ai-card">
-            <h6 class="sidebar-label text-indigo">SUGERENCIA IA</h6>
-            <p class="text-indigo-light small">
-              Alta saciedad (4.7★) y buena adherencia — el plan encaja bien contigo. La IA no
-              recomienda cambios por ahora.
-            </p>
+            }
           </div>
         </div>
       </div>

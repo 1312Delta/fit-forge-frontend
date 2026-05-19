@@ -7,13 +7,13 @@
 
     <div class="filters-container mb-4">
       <div class="d-flex flex-wrap gap-2">
-        @for (cat of categories; track cat) {
+        @for (cat of categories; track cat.value) {
           <button
             class="filter-pill"
-            [class.active]="selectedCategory() === cat"
-            (click)="selectCategory(cat)"
+            [class.active]="selectedCategory() === cat.value"
+            (click)="selectCategory(cat.value)"
           >
-            {{ cat }}
+            {{ cat.label }}
           </button>
         }
       </div>
@@ -39,69 +39,35 @@
             <div class="diet-card h-100">
               <!-- Top tags -->
               <div class="d-flex gap-2 mb-3">
-                @if (diet.category) {
-                  <span class="diet-badge">{{ diet.category }}</span>
+                @if (diet.goalType) {
+                  <span class="diet-badge">{{ goalLabel(diet.goalType) }}</span>
                 }
-                <!-- If assigned -->
-                @if (diet.id === 'current-assigned') {
+                @if (diet.assigned) {
                   <span class="diet-badge badge-active"><i class="bi bi-check2"></i> Tu dieta</span>
                 }
               </div>
 
               <!-- Title & Desc -->
-              <h4 class="diet-title">{{ diet.title }}</h4>
+              <h4 class="diet-title">{{ diet.name }}</h4>
               <p class="diet-desc">{{ diet.description }}</p>
 
               <!-- Calories -->
-              <div class="diet-calories mb-4">
-                <span class="cal-number">{{ diet.totalCalories | number }}</span>
-                <span class="cal-text">kcal / día</span>
-              </div>
+              @if (diet.dailyKcal) {
+                <div class="diet-calories mb-4">
+                  <span class="cal-number">{{ diet.dailyKcal | number }}</span>
+                  <span class="cal-text">kcal / día</span>
+                </div>
+              }
 
-              <!-- Macros -->
-              <div class="macros-list mb-4">
-                <div class="macro-item">
-                  <span class="macro-label">Proteína</span>
-                  <div class="macro-progress-bar">
-                    <div
-                      class="progress-fill fill-protein"
-                      [style.width.%]="(diet.protein || 0) / 3"
-                    ></div>
-                  </div>
-                  <span class="macro-value">{{ diet.protein || 0 }}g</span>
-                </div>
-                <div class="macro-item">
-                  <span class="macro-label">Carbos</span>
-                  <div class="macro-progress-bar">
-                    <div
-                      class="progress-fill fill-carbs"
-                      [style.width.%]="(diet.carbs || 0) / 4"
-                    ></div>
-                  </div>
-                  <span class="macro-value">{{ diet.carbs || 0 }}g</span>
-                </div>
-                <div class="macro-item">
-                  <span class="macro-label">Grasas</span>
-                  <div class="macro-progress-bar">
-                    <div class="progress-fill fill-fat" [style.width.%]="diet.fat || 0"></div>
-                  </div>
-                  <span class="macro-value">{{ diet.fat || 0 }}g</span>
-                </div>
-              </div>
-
-              <!-- Meals -->
+              <!-- Meals count -->
               <div class="meals-pills mb-4">
-                @for (meal of diet.mealsList || ['Desayuno', 'Almuerzo', 'Cena']; track meal) {
-                  <span class="meal-pill">{{ meal }}</span>
-                }
+                <span class="meal-pill">
+                  <i class="bi bi-clock me-1"></i>{{ diet.mealCount }} comidas/día
+                </span>
               </div>
 
               <!-- Footer -->
-              <div class="diet-footer mt-auto d-flex justify-content-between align-items-center">
-                <div class="rating">
-                  <i class="bi bi-star-fill text-warning"></i> 4.6
-                  <span class="text-muted-light ms-1">· 284 usuarios</span>
-                </div>
+              <div class="diet-footer mt-auto d-flex justify-content-end align-items-center">
                 <button
                   class="btn btn-outline-light rounded-pill px-4"
                   [routerLink]="['/nutrition/diets', diet.id]"

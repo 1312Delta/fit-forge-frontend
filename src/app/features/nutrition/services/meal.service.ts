@@ -1,93 +1,94 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { DailyNutritionProgress, Meal } from '../models/meal.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-const MOCK_DAILY_PROGRESS: DailyNutritionProgress = {
-  date: new Date().toISOString().split('T')[0],
-  targetCalories: 2400,
-  consumedCalories: 1840,
-  targetProtein: 200,
-  consumedProtein: 156,
-  targetCarbs: 300,
-  consumedCarbs: 210,
-  targetFat: 80,
-  consumedFat: 71,
-  meals: [
-    {
-      id: 1,
-      type: 'breakfast',
-      name: 'Desayuno',
-      time: '08:30',
-      calories: 486,
-      protein: 25,
-      carbs: 60,
-      fat: 15,
-      completed: true,
-      ingredients: [
-        { id: 1, name: 'Avena con leche', amount: '80g', calories: 312 },
-        { id: 2, name: 'Plátano', amount: '120g', calories: 107 },
-        { id: 3, name: 'Huevos revueltos', amount: '2 uds', calories: 143 },
-      ],
-    } as Meal,
-    {
-      id: 2,
-      type: 'lunch',
-      name: 'Almuerzo',
-      time: '13:00',
-      calories: 724,
-      protein: 45,
-      carbs: 85,
-      fat: 22,
-      completed: true,
-      ingredients: [
-        { id: 4, name: 'Pechuga de pollo', amount: '180g', calories: 297 },
-        { id: 5, name: 'Arroz integral', amount: '150g', calories: 195 },
-        { id: 6, name: 'Brócoli al vapor', amount: '200g', calories: 68 },
-        { id: 7, name: 'Aceite de oliva', amount: '15ml', calories: 132 },
-      ],
-    } as Meal,
-    {
-      id: 3,
-      type: 'snack',
-      name: 'Merienda',
-      time: '17:00',
-      calories: 280,
-      protein: 20,
-      carbs: 30,
-      fat: 10,
-      completed: true,
-      ingredients: [
-        { id: 8, name: 'Yogur griego', amount: '1 ud', calories: 120 },
-        { id: 9, name: 'Nueces', amount: '30g', calories: 160 },
-      ],
-    } as Meal,
-    {
-      id: 4,
-      type: 'dinner',
-      name: 'Cena',
-      time: '21:00',
-      calories: 560,
-      protein: 40,
-      carbs: 45,
-      fat: 18,
-      completed: false,
-      ingredients: [],
-    } as Meal,
-  ],
-};
+export type GeneralFeeling = 'bad' | 'regular' | 'good' | 'great';
 
-@Injectable({
-  providedIn: 'root',
-})
+export interface DietLogSummary {
+  id: number;
+  loggedAt: string; // YYYY-MM-DD
+  dietId: number | null;
+  generalFeeling: GeneralFeeling | null;
+  notes: string | null;
+  mealCount: number;
+}
+
+export interface DietLogHistory {
+  data: DietLogSummary[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface CreateDietLogPayload {
+  dietId?: number;
+  loggedAt?: string; // YYYY-MM-DD
+  generalFeeling?: GeneralFeeling;
+  notes?: string;
+}
+
+export interface MealLogCreated {
+  id: number;
+  mealId: number;
+  mealName: string;
+}
+
+export interface MealLogEntry {
+  id: number;
+  mealId: number;
+  mealName: string;
+  enjoyment: number | null;
+  satiety: number | null;
+}
+
+export interface DietLogDetail {
+  id: number;
+  loggedAt: string;
+  dietId: number | null;
+  generalFeeling: GeneralFeeling | null;
+  notes: string | null;
+  mealLogs: MealLogEntry[];
+}
+
+export interface MealLogRating {
+  id: number;
+  enjoyment: number | null;
+  satiety: number | null;
+}
+
+@Injectable({ providedIn: 'root' })
 export class MealService {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getDailyProgress(date?: string): Observable<DailyNutritionProgress> {
-    return of(MOCK_DAILY_PROGRESS).pipe(delay(500));
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
+
+  getDietLogHistory(page = 1, limit = 20): Observable<DietLogHistory> {
+    const params = new HttpParams().set('page', page).set('limit', limit);
+    return this.http.get<DietLogHistory>(`${this.apiUrl}/diet-logs`, { params });
   }
 
-  markMealAsCompleted(mealId: string | number, completed: boolean): Observable<Meal> {
-    const meal = MOCK_DAILY_PROGRESS.meals.find((m) => m.id === mealId)!;
-    meal.completed = completed;
-    return of({ ...meal }).pipe(delay(300));
+  getDietLog(id: number): Observable<DietLogDetail> {
+    return this.http.get<DietLogDetail>(`${this.apiUrl}/diet-logs/${id}`);
+  }
+
+  createDietLog(payload: CreateDietLogPayload): Observable<DietLogSummary> {
+    return this.http.post<DietLogSummary>(`${this.apiUrl}/diet-logs`, payload);
+  }
+
+  markMeal(dietLogId: number, mealId: number): Observable<MealLogCreated> {
+    return this.http.post<MealLogCreated>(`${this.apiUrl}/diet-logs/${dietLogId}/meals`, {
+      mealId,
+    });
+  }
+
+  rateMeal(
+    dietLogId: number,
+    mealLogId: number,
+    rating: { enjoyment?: number; satiety?: number },
+  ): Observable<MealLogRating> {
+    return this.http.put<MealLogRating>(
+      `${this.apiUrl}/diet-logs/${dietLogId}/meals/${mealLogId}`,
+      rating,
+    );
   }
 }

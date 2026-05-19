@@ -1,164 +1,23 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { forkJoin, catchError, of } from 'rxjs';
 import { DietService } from '../services/diet.service';
-import { Diet } from '../models/diet.model';
+import {
+  DietDetail as DietDetailModel,
+  FoodDetail,
+  GOAL_TYPE_LABELS,
+  GoalType,
+  MealDetail,
+} from '../models/diet.model';
 
-interface FoodItem {
-  name: string;
-  amount: string;
+interface MacroTotals {
   kcal: number;
   protein: number;
   carbs: number;
   fat: number;
-  dotClass: string;
+  fiber: number;
 }
-
-interface MealPlan {
-  name: string;
-  time: string;
-  totalCalories: number;
-  foods: FoodItem[];
-}
-
-const WEEKLY_PLAN: MealPlan[] = [
-  {
-    name: 'Desayuno',
-    time: '08:00 — 09:00',
-    totalCalories: 487,
-    foods: [
-      {
-        name: 'Avena con leche',
-        amount: '80g',
-        kcal: 312,
-        protein: 12,
-        carbs: 52,
-        fat: 6,
-        dotClass: 'dot-yellow',
-      },
-      {
-        name: 'Plátano',
-        amount: '120g',
-        kcal: 107,
-        protein: 1,
-        carbs: 27,
-        fat: 0,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Huevos revueltos',
-        amount: '2 uds',
-        kcal: 143,
-        protein: 12,
-        carbs: 1,
-        fat: 10,
-        dotClass: 'dot-green',
-      },
-    ],
-  },
-  {
-    name: 'Almuerzo',
-    time: '13:00 — 14:00',
-    totalCalories: 724,
-    foods: [
-      {
-        name: 'Pechuga de pollo',
-        amount: '180g',
-        kcal: 297,
-        protein: 55,
-        carbs: 0,
-        fat: 6,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Arroz integral',
-        amount: '150g',
-        kcal: 195,
-        protein: 4,
-        carbs: 42,
-        fat: 2,
-        dotClass: 'dot-yellow',
-      },
-      {
-        name: 'Brócoli al vapor',
-        amount: '200g',
-        kcal: 68,
-        protein: 6,
-        carbs: 12,
-        fat: 1,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Aceite de oliva',
-        amount: '15ml',
-        kcal: 132,
-        protein: 0,
-        carbs: 0,
-        fat: 15,
-        dotClass: 'dot-yellow',
-      },
-    ],
-  },
-  {
-    name: 'Merienda',
-    time: '17:00 — 17:30',
-    totalCalories: 280,
-    foods: [
-      {
-        name: 'Yogur griego',
-        amount: '200g',
-        kcal: 130,
-        protein: 17,
-        carbs: 8,
-        fat: 4,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Frutos secos mix',
-        amount: '30g',
-        kcal: 180,
-        protein: 5,
-        carbs: 6,
-        fat: 15,
-        dotClass: 'dot-yellow',
-      },
-    ],
-  },
-  {
-    name: 'Cena',
-    time: '21:00 — 22:00',
-    totalCalories: 620,
-    foods: [
-      {
-        name: 'Salmón al horno',
-        amount: '200g',
-        kcal: 416,
-        protein: 44,
-        carbs: 0,
-        fat: 26,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Ensalada verde',
-        amount: '150g',
-        kcal: 30,
-        protein: 2,
-        carbs: 5,
-        fat: 0,
-        dotClass: 'dot-green',
-      },
-      {
-        name: 'Patata al horno',
-        amount: '150g',
-        kcal: 117,
-        protein: 3,
-        carbs: 27,
-        fat: 0,
-        dotClass: 'dot-yellow',
-      },
-    ],
-  },
-];
 
 @Component({
   selector: 'app-diet-detail',
@@ -172,48 +31,131 @@ export class DietDetail implements OnInit {
   private readonly location = inject(Location);
   private readonly dietService = inject(DietService);
 
-  diet = signal<Diet | null>(null);
+  diet = signal<DietDetailModel | null>(null);
   loading = signal<boolean>(true);
-  selectedDay = signal<string>('Lunes');
+  error = signal<string | null>(null);
+  assigning = signal<boolean>(false);
+  selectedDayIndex = signal<number>(1); // 1=Monday … 7=Sunday
 
-  readonly days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  readonly days = [
+    { label: 'Lunes', value: 1 },
+    { label: 'Martes', value: 2 },
+    { label: 'Miércoles', value: 3 },
+    { label: 'Jueves', value: 4 },
+    { label: 'Viernes', value: 5 },
+    { label: 'Sábado', value: 6 },
+    { label: 'Domingo', value: 7 },
+  ];
+
+  readonly goalLabel = (g: GoalType | null): string => (g ? GOAL_TYPE_LABELS[g] : '');
+
+  mealsForSelectedDay = computed<MealDetail[]>(() => {
+    const d = this.diet();
+    if (!d) return [];
+    const day = this.selectedDayIndex();
+    const sameDay = d.meals.filter((m) => m.dayOfWeek === day);
+    // If the diet has no per-day breakdown (e.g. fixture data with only dayOfWeek=1),
+    // fall back to showing all meals.
+    if (sameDay.length === 0 && d.meals.some((m) => m.dayOfWeek !== day)) {
+      return d.meals;
+    }
+    return sameDay;
+  });
+
+  mealTotals(meal: MealDetail): MacroTotals {
+    return meal.foods.reduce<MacroTotals>(
+      (acc, mf) => {
+        const f = mf.food;
+        const q = mf.quantityG / 100;
+        return {
+          kcal: acc.kcal + (f.kcalPer100g ?? 0) * q,
+          protein: acc.protein + (f.proteinG ?? 0) * q,
+          carbs: acc.carbs + (f.carbsG ?? 0) * q,
+          fat: acc.fat + (f.fatG ?? 0) * q,
+          fiber: acc.fiber + (f.fiberG ?? 0) * q,
+        };
+      },
+      { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
+    );
+  }
+
+  dietTotals = computed<MacroTotals>(() => {
+    const d = this.diet();
+    if (!d) return { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+    return this.mealsForSelectedDay().reduce<MacroTotals>(
+      (acc, m) => {
+        const t = this.mealTotals(m);
+        return {
+          kcal: acc.kcal + t.kcal,
+          protein: acc.protein + t.protein,
+          carbs: acc.carbs + t.carbs,
+          fat: acc.fat + t.fat,
+          fiber: acc.fiber + t.fiber,
+        };
+      },
+      { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
+    );
+  });
+
+  foodKcal(food: FoodDetail, quantityG: number): number {
+    return ((food.kcalPer100g ?? 0) * quantityG) / 100;
+  }
+
+  foodMacro(value: number | null, quantityG: number): number {
+    return ((value ?? 0) * quantityG) / 100;
+  }
 
   ngOnInit(): void {
+    const today = new Date().getDay(); // 0=Sun..6=Sat
+    this.selectedDayIndex.set(today === 0 ? 7 : today);
+
     this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      if (id) {
+      const idParam = params.get('id');
+      const id = idParam ? Number(idParam) : NaN;
+      if (Number.isFinite(id)) {
         this.loadDiet(id);
       }
     });
   }
 
-  loadDiet(id: string): void {
+  loadDiet(id: number): void {
     this.loading.set(true);
-    const dietId = isNaN(Number(id)) ? id : Number(id);
+    this.error.set(null);
 
-    this.dietService.getDietById(dietId).subscribe({
-      next: (data) => {
-        this.diet.set(data);
+    forkJoin({
+      diet: this.dietService.getDietById(id),
+      me: this.dietService.getMe().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ diet, me }) => {
+        this.diet.set({ ...diet, assigned: me?.assignedDietId === diet.id });
         this.loading.set(false);
       },
       error: (err) => {
         console.error('Error fetching diet details', err);
+        this.error.set('No se pudo cargar la dieta.');
         this.loading.set(false);
       },
     });
-  }
-
-  getMealsForDay(): MealPlan[] {
-    // En datos reales, cada día podría tener un plan diferente.
-    // Con mock, todos los días comparten el mismo plan de comidas.
-    return WEEKLY_PLAN;
   }
 
   goBack(): void {
     this.location.back();
   }
 
-  selectDiet(): void {
-    console.log('Dieta asignada:', this.diet()?.title);
+  assignDiet(): void {
+    const d = this.diet();
+    if (!d || this.assigning()) return;
+    this.assigning.set(true);
+    this.dietService.assignDiet(d.id).subscribe({
+      next: () => {
+        this.diet.set({ ...d, assigned: true });
+        this.assigning.set(false);
+      },
+      error: (err) => {
+        console.error('Error assigning diet', err);
+        this.assigning.set(false);
+        this.error.set('No se pudo asignar la dieta.');
+      },
+    });
   }
 }

@@ -25,6 +25,55 @@
   border: 1px solid #2c2c2c;
 }
 
+.nutrition-setup-card {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: linear-gradient(180deg, rgba(74, 222, 128, 0.06), transparent 40%), #1e1e1e;
+}
+
+.nutrition-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.nutrition-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #a0a0a0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.nutrition-control {
+  height: 42px;
+}
+
+select.nutrition-control,
+input.nutrition-control {
+  line-height: 1.2;
+}
+
+.meal-check-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background-color: #4ade80;
+    border-color: #4ade80;
+    color: #0a0a0a;
+  }
+}
+
 /* Calories Circle */
 .calories-circle {
   width: 140px;
@@ -115,16 +164,12 @@
   cursor: pointer;
 }
 
-.meal-icon {
-  width: 40px;
-  height: 40px;
-  background-color: #2c2c2c;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
-  color: #f59e0b; /* orange */
+.meal-bullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #4ade80;
+  flex-shrink: 0;
 }
 
 .bg-success-soft {
