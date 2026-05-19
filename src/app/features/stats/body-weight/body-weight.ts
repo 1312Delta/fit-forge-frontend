@@ -67,9 +67,7 @@ export class BodyWeight implements OnInit {
   });
 
   ngOnInit() {
-    if (!this.history().length) {
-      this.statsService.refreshAll();
-    }
+    this.statsService.refreshAll();
   }
 
   submitWeight() {
