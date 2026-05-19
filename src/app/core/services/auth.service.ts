@@ -6,9 +6,11 @@ import { environment } from '../../../environments/environment';
 
 interface JwtPayload {
   sub: number;
-  username: string;
+  username?: string;
+  email?: string;
   roles: string[];
   exp: number;
+  iat?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +19,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly TOKEN_KEY = 'token';
   readonly isLoggedIn = signal(this.hasValidToken());
+  readonly username = signal(this.getPayload()?.username ?? null);
 
   register(data: {
     username: string;
@@ -36,6 +39,7 @@ export class AuthService {
         tap(({ token }) => {
           localStorage.setItem(this.TOKEN_KEY, token);
           this.isLoggedIn.set(true);
+          this.username.set(this.getPayload()?.username ?? null);
         }),
       );
   }
@@ -43,6 +47,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     this.isLoggedIn.set(false);
+    this.username.set(null);
     this.router.navigate(['/login']);
   }
 
@@ -56,6 +61,10 @@ export class AuthService {
 
   getUserId(): number | null {
     return this.getPayload()?.sub ?? null;
+  }
+
+  getUsername(): string | null {
+    return this.getPayload()?.username ?? null;
   }
 
   getToken(): string | null {

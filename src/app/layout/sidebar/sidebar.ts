@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { DashboardService } from '../../core/services/dashboard.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -64,12 +65,14 @@ import { AuthService } from '../../core/services/auth.service';
 
     <!-- User profile -->
     <div class="sb-user">
-      <div class="sb-avatar">JD</div>
+      <div class="sb-avatar">{{ initials() }}</div>
       <div class="sb-user-info">
-        <div class="sb-user-name">Juan David</div>
-        <div class="sb-user-goal">Ganar músculo</div>
+        <div class="sb-user-name">{{ displayName() }}</div>
       </div>
     </div>
+
+    <!-- Logout -->
+    <button class="sb-logout" (click)="auth.logout()">↩ Cerrar sesión</button>
   `,
   styles: [
     `
@@ -204,9 +207,25 @@ import { AuthService } from '../../core/services/auth.service';
         color: var(--color-text);
       }
 
-      .sb-user-goal {
-        font-size: 0.72rem;
+      .sb-logout {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.45rem 0.65rem;
+        border: none;
+        border-radius: var(--radius-md);
+        background: transparent;
         color: var(--color-text-muted);
+        font-size: 0.84rem;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+
+      .sb-logout:hover {
+        background: var(--color-surface-2);
+        color: var(--color-danger, #e53935);
       }
 
       /* ── Responsive: hide on mobile ─────────────── */
@@ -220,4 +239,8 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class Sidebar {
   protected auth = inject(AuthService);
+  private readonly ds = inject(DashboardService);
+  private readonly greeting = this.ds.getGreeting();
+  readonly displayName = computed(() => this.greeting().userName);
+  readonly initials = computed(() => this.displayName().slice(0, 2).toUpperCase());
 }
