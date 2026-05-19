@@ -183,4 +183,11 @@ export class BodyWeight implements OnInit {
     if (bmi === null) return null;
     return BMI_CATEGORIES.find((c) => bmi >= c.min && bmi < c.max) ?? BMI_CATEGORIES[5];
   }
+
+  deleteWeightLog(id: number, event: Event): void {
+    event.stopPropagation();
+    if (confirm('¿Estás seguro de que deseas eliminar este registro de peso de tu historial?')) {
+      this.statsService.deleteWeightLog(id);
+    }
+  }
 }

@@ -281,7 +281,7 @@
             >
               <div class="hc-header">
                 <strong class="hc-weight">{{ item.weightKg }} kg</strong>
-                <div class="hc-diff">
+                <div class="hc-actions">
                   @if (getDiff(i); as diff) {
                     <ff-badge [variant]="diff <= 0 ? 'easy' : 'hard'">
                       {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
@@ -289,6 +289,13 @@
                   } @else {
                     <span class="hc-diff-empty">--</span>
                   }
+                  <button
+                    class="delete-log-btn"
+                    (click)="deleteWeightLog(item.id, $event)"
+                    title="Eliminar registro"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
               <div class="hc-body">
