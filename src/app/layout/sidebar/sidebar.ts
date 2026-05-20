@@ -24,7 +24,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
         Dashboard
       </a>
       <a
-        routerLink="/stats"
+        routerLink="/stats/workouts"
         routerLinkActive="sb-active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="sb-link"

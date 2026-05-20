@@ -1,19 +1,71 @@
 <div class="l-dashboard-page">
   <header class="l-dashboard-page__header">
-    <h1 class="c-title">Peso corporal</h1>
-    <p class="c-subtitle">Sigue tu progreso y evolución</p>
+    <h1 class="c-title">Composición corporal</h1>
+    <p class="c-subtitle">Tu IMC, peso y evolución en un solo lugar</p>
   </header>
 
   @if (!loading()) {
-    <!-- KPIs -->
+    <!-- KPIs Row -->
     <div class="kpi-grid mb-4">
-      <ff-stat-tile
-        label="Peso actual"
-        [value]="kpis().currentWeight ? kpis().currentWeight + ' kg' : '--'"
-        hint="Último registro"
-        tone="primary"
-      >
-      </ff-stat-tile>
+      <!-- Peso actual + Altura actual (split card) -->
+      <div class="kpi-split-card">
+        <div class="kpi-half">
+          <div class="kpi-label">Peso actual</div>
+          <div class="kpi-value primary">
+            {{ kpis().currentWeight ? kpis().currentWeight + ' kg' : '--' }}
+          </div>
+          <div class="kpi-hint">Último registro</div>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-half">
+          <div class="kpi-label">
+            Altura actual
+            @if (!editingHeight()) {
+              <button class="edit-height-btn" (click)="startEditHeight()" title="Editar altura">
+                ✏️
+              </button>
+            }
+          </div>
+          @if (editingHeight()) {
+            <div class="height-edit-row">
+              <input
+                type="number"
+                class="height-edit-input"
+                [(ngModel)]="editHeightValue"
+                min="50"
+                max="300"
+                (keydown.enter)="saveHeight()"
+                (keydown.escape)="cancelEditHeight()"
+              />
+              <button class="height-save-btn" (click)="saveHeight()">✓</button>
+              <button class="height-cancel-btn" (click)="cancelEditHeight()">✕</button>
+            </div>
+          } @else {
+            <div class="kpi-value info">
+              {{ userHeightCm() ? userHeightCm() + ' cm' : '--' }}
+            </div>
+          }
+          <div class="kpi-hint">Puedes actualizar</div>
+        </div>
+      </div>
+
+      <!-- IMC actual -->
+      <div class="kpi-bmi-card">
+        <div class="kpi-label">IMC actual</div>
+        @if (currentBmi() !== null) {
+          <div class="kpi-value" [style.color]="currentBmiCategory()?.color">
+            {{ currentBmi() | number: '1.1-1' }}
+          </div>
+          <div class="bmi-category-badge" [style.background]="currentBmiCategory()?.color">
+            {{ currentBmiCategory()?.label }}
+          </div>
+        } @else {
+          <div class="kpi-value">--</div>
+          <div class="kpi-hint">Registra peso y altura</div>
+        }
+      </div>
+
+      <!-- Cambio total + Registros -->
       <ff-stat-tile
         label="Cambio total"
         [value]="
@@ -25,6 +77,7 @@
         [tone]="kpis().totalChange !== null && kpis().totalChange! <= 0 ? 'primary' : 'danger'"
       >
       </ff-stat-tile>
+
       <ff-stat-tile
         label="Registros"
         [value]="kpis().totalEntries"
@@ -34,74 +87,173 @@
       </ff-stat-tile>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- BMI Range Bar -->
+    @if (currentBmi() !== null) {
+      <div class="bmi-bar-container mb-4">
+        <div class="bmi-bar-title">Escala de IMC</div>
+        <div class="bmi-bar">
+          @for (cat of bmiCategories; track cat.label) {
+            <div
+              class="bmi-bar-segment"
+              [style.background]="cat.color"
+              [title]="cat.label + ': ' + cat.min + ' - ' + cat.max"
+            >
+              <span class="bmi-bar-segment-label">{{ cat.label }}</span>
+            </div>
+          }
+          <div class="bmi-bar-indicator" [style.left.%]="bmiIndicatorPercent()">
+            <div class="bmi-bar-indicator-dot"></div>
+            <div class="bmi-bar-indicator-value">{{ currentBmi() | number: '1.1-1' }}</div>
+          </div>
+        </div>
+        <div class="bmi-bar-range">
+          <span>15</span>
+          <span>20</span>
+          <span>25</span>
+          <span>30</span>
+          <span>35</span>
+          <span>40</span>
+          <span>45</span>
+        </div>
+      </div>
+    }
+
+    <!-- Layout: Formulario | Gráfica -->
+    <div class="dashboard-grid mb-4">
+      <!-- Formulario -->
+      <div class="side-column">
+        <ff-section-card title="Nuevo pesaje" class="h-100 form-card">
+          <form (ngSubmit)="submitWeight()" #weightForm="ngForm" class="weight-form">
+            <div class="form-group mb-3">
+              <label class="form-label" for="weight-input">Peso (kg)</label>
+              <div class="input-with-suffix">
+                <input
+                  id="weight-input"
+                  type="number"
+                  class="c-input fw-bold"
+                  [(ngModel)]="newWeight"
+                  name="weight"
+                  required
+                  min="20"
+                  max="300"
+                  step="0.1"
+                  placeholder="Ej: 75.5"
+                />
+                <span class="suffix">kg</span>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label" for="date-input">Fecha</label>
+              <input
+                type="date"
+                id="date-input"
+                class="c-input"
+                [(ngModel)]="newDate"
+                name="date"
+                required
+              />
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label" for="notes-input">Notas (Opcional)</label>
+              <textarea
+                id="notes-input"
+                class="c-input"
+                [(ngModel)]="newNotes"
+                name="notes"
+                rows="2"
+                placeholder="Ej: En ayunas, post entreno..."
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              class="c-btn c-btn--primary w-100 mt-auto"
+              [disabled]="!weightForm.form.valid"
+            >
+              Guardar pesaje
+            </button>
+          </form>
+        </ff-section-card>
+      </div>
+
       <!-- Gráfica SVG -->
-      <ff-section-card title="Evolución" class="main-card">
+      <ff-section-card
+        [title]="userHeightCm() ? 'Evolución del IMC' : 'Evolución del peso'"
+        class="main-card"
+      >
         @if (chartData()) {
           <div class="chart-container">
             <svg
               [attr.viewBox]="chartData()!.viewBox"
               class="weight-chart"
-              preserveAspectRatio="none"
+              preserveAspectRatio="xMidYMid meet"
             >
               <!-- Grid lines -->
               <line
-                x1="40"
-                y1="260"
-                x2="960"
-                y2="260"
+                x1="50"
+                y1="210"
+                x2="550"
+                y2="210"
                 stroke="var(--color-border)"
-                stroke-width="1"
+                stroke-width="0.5"
               />
               <line
-                x1="40"
-                y1="150"
-                x2="960"
-                y2="150"
+                x1="50"
+                y1="125"
+                x2="550"
+                y2="125"
                 stroke="var(--color-border)"
-                stroke-width="1"
+                stroke-width="0.5"
               />
               <line
-                x1="40"
+                x1="50"
                 y1="40"
-                x2="960"
+                x2="550"
                 y2="40"
                 stroke="var(--color-border)"
-                stroke-width="1"
+                stroke-width="0.5"
               />
 
               <!-- Labels -->
-              <text x="10" y="265" class="chart-label">{{ chartData()!.minW }}kg</text>
-              <text x="10" y="45" class="chart-label">{{ chartData()!.maxW }}kg</text>
+              <text x="8" y="214" class="chart-label">
+                {{ chartData()!.minV | number: '1.0-0' }}
+              </text>
+              <text x="8" y="44" class="chart-label">
+                {{ chartData()!.maxV | number: '1.0-0' }}
+              </text>
 
               <!-- Line -->
               <path
                 [attr.d]="chartData()!.dLine"
                 fill="none"
                 stroke="var(--color-primary)"
-                stroke-width="3"
+                stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                class="chart-path"
               />
 
               <!-- Points -->
               @for (p of chartData()!.points; track p.date) {
-                <g class="chart-point-group">
-                  <circle
-                    [attr.cx]="p.x"
-                    [attr.cy]="p.y"
-                    r="5"
-                    fill="var(--color-surface)"
-                    stroke="var(--color-primary)"
-                    stroke-width="2"
-                  />
+                <g
+                  class="chart-point-group"
+                  [class.highlighted]="highlightedEntryId() === p.id"
+                  [class.dimmed]="highlightedEntryId() !== null && highlightedEntryId() !== p.id"
+                  (mouseenter)="highlightedEntryId.set(p.id)"
+                  (mouseleave)="highlightedEntryId.set(null)"
+                >
+                  <circle [attr.cx]="p.x" [attr.cy]="p.y" class="chart-circle" />
                   <text
                     [attr.x]="p.x"
-                    [attr.y]="p.y - 15"
+                    [attr.y]="p.y - 10"
                     class="chart-tooltip"
                     text-anchor="middle"
                   >
-                    {{ p.weight }}kg ({{ p.date | date: 'dd/MM' }})
+                    {{ userHeightCm() ? (p.bmi | number: '1.1-1') + ' IMC' : p.weight + 'kg' }} ({{
+                      p.date | date: 'dd/MM'
+                    }})
                   </text>
                 </g>
               }
@@ -114,86 +266,61 @@
           </div>
         }
       </ff-section-card>
-
-      <!-- Formulario & Historial -->
-      <div class="side-column">
-        <ff-section-card title="Nuevo pesaje" class="mb-4">
-          <form (ngSubmit)="submitWeight()" #weightForm="ngForm" class="weight-form">
-            <div class="form-group mb-3">
-              <label class="form-label" for="weight-input">Peso (kg)</label>
-              <input
-                id="weight-input"
-                type="number"
-                class="c-input"
-                [(ngModel)]="newWeight"
-                name="weight"
-                required
-                min="20"
-                max="300"
-                step="0.1"
-                placeholder="Ej: 75.5"
-              />
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label" for="date-input">Fecha</label>
-              <input
-                type="date"
-                id="date-input"
-                class="c-input"
-                [(ngModel)]="newDate"
-                name="date"
-                required
-              />
-            </div>
-            <div class="form-group mb-4">
-              <label class="form-label" for="notes-input">Notas (Opcional)</label>
-              <textarea
-                id="notes-input"
-                class="c-input"
-                [(ngModel)]="newNotes"
-                name="notes"
-                rows="2"
-                placeholder="Ej: En ayunas"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              class="c-btn c-btn--primary w-100"
-              [disabled]="!weightForm.form.valid"
-            >
-              Guardar pesaje
-            </button>
-          </form>
-        </ff-section-card>
-
-        <ff-section-card title="Historial">
-          @if (sortedHistoryDesc().length) {
-            <div class="history-list">
-              @for (item of sortedHistoryDesc(); track item.id; let i = $index) {
-                <div class="history-item">
-                  <div class="hi-info">
-                    <strong>{{ item.weightKg }} kg</strong>
-                    <span class="hi-date">{{ item.loggedAt | date: 'dd MMM yyyy' }}</span>
-                    @if (item.notes) {
-                      <span class="hi-notes">{{ item.notes }}</span>
-                    }
-                  </div>
-                  <div class="hi-diff">
-                    @if (getDiff(i); as diff) {
-                      <ff-badge [variant]="diff <= 0 ? 'easy' : 'hard'">
-                        {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
-                      </ff-badge>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="text-muted small">Aún no tienes pesajes registrados.</p>
-          }
-        </ff-section-card>
-      </div>
     </div>
+
+    <!-- Historial Horizontal -->
+    <ff-section-card title="Historial completo">
+      @if (sortedHistoryDesc().length) {
+        <div class="history-horizontal-list">
+          @for (item of sortedHistoryDesc(); track item.id; let i = $index) {
+            <div
+              class="history-card"
+              [class.highlighted]="highlightedEntryId() === item.id"
+              (mouseenter)="highlightedEntryId.set(item.id)"
+              (mouseleave)="highlightedEntryId.set(null)"
+            >
+              <div class="hc-header">
+                <strong class="hc-weight">{{ item.weightKg }} kg</strong>
+                <div class="hc-actions">
+                  @if (getDiff(i); as diff) {
+                    <ff-badge [variant]="diff <= 0 ? 'easy' : 'hard'">
+                      {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.1-1' }}
+                    </ff-badge>
+                  } @else {
+                    <span class="hc-diff-empty">--</span>
+                  }
+                  <button
+                    class="delete-log-btn"
+                    (click)="deleteWeightLog(item.id, $event)"
+                    title="Eliminar registro"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div class="hc-body">
+                <span class="hc-date"
+                  ><span class="icon">📅</span> {{ item.loggedAt | date: 'dd MMM yyyy' }}</span
+                >
+                @if (getBmiForWeight(item.weightKg); as bmi) {
+                  <span
+                    class="hc-bmi"
+                    [style.color]="getBmiCategoryForWeight(item.weightKg)?.color"
+                  >
+                    <span class="icon">📊</span> IMC {{ bmi | number: '1.1-1' }}
+                  </span>
+                }
+                @if (item.notes) {
+                  <span class="hc-notes"><span class="icon">📝</span> {{ item.notes }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-muted small py-3">Aún no tienes pesajes registrados.</p>
+      }
+    </ff-section-card>
   } @else {
     <div class="loader-container py-5 text-center">
       <div class="spinner"></div>

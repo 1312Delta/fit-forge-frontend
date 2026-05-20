@@ -25,6 +25,10 @@ export class StatsService {
 
   readonly loading = signal<boolean>(false);
 
+  // -- User body data --
+  private readonly userHeightCmSig = signal<number | null>(null);
+  readonly userHeightCm = this.userHeightCmSig.asReadonly();
+
   // -- Computed KPIs --
   readonly weightKpis = computed<WeightKpis>(() => {
     const history = this.weightHistory();
@@ -131,6 +135,50 @@ export class StatsService {
     this.workoutHistorySig.set([]);
     this.loadAllWeightHistory(1);
     this.loadAllWorkoutHistory(1);
+    this.loadUserHeight();
+  }
+
+  private loadUserHeight(): void {
+    this.http
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .get<any>(`${environment.apiUrl}/users/me`)
+      .subscribe({
+        next: (user) => {
+          if (user?.heightCm) {
+            this.userHeightCmSig.set(Number(user.heightCm));
+          }
+        },
+      });
+  }
+
+  updateUserHeight(heightCm: number): Observable<unknown> {
+    return this.http.put(`${environment.apiUrl}/users/me`, { heightCm }).pipe(
+      tap(() => {
+        this.userHeightCmSig.set(heightCm);
+      }),
+    );
+  }
+
+  private getDeletedIds(): number[] {
+    try {
+      const stored = localStorage.getItem('fitforge_deleted_weight_logs');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveDeletedIds(ids: number[]): void {
+    localStorage.setItem('fitforge_deleted_weight_logs', JSON.stringify(ids));
+  }
+
+  deleteWeightLog(id: number): void {
+    const deletedIds = this.getDeletedIds();
+    if (!deletedIds.includes(id)) {
+      deletedIds.push(id);
+      this.saveDeletedIds(deletedIds);
+    }
+    this.weightHistorySig.update((prev) => prev.filter((item) => item.id !== id));
   }
 
   private loadAllWeightHistory(page = 1): void {
@@ -138,10 +186,12 @@ export class StatsService {
       .get<WeightHistoryResponse>(`${environment.apiUrl}/users/me/weight?page=${page}&limit=50`)
       .subscribe({
         next: (res) => {
+          const deletedIds = this.getDeletedIds();
+          const filtered = res.data.filter((item) => !deletedIds.includes(item.id));
           if (page === 1) {
-            this.weightHistorySig.set(res.data);
+            this.weightHistorySig.set(filtered);
           } else {
-            this.weightHistorySig.update((prev) => [...prev, ...res.data]);
+            this.weightHistorySig.update((prev) => [...prev, ...filtered]);
           }
 
           if (res.data.length === 50) {
@@ -177,6 +227,12 @@ export class StatsService {
   logWeight(payload: WeightLogPayload): Observable<WeightLogEntry> {
     return this.http.post<WeightLogEntry>(`${environment.apiUrl}/users/me/weight`, payload).pipe(
       tap((newEntry) => {
+        // Ensure new logs don't clash with previously locally deleted logs
+        const deletedIds = this.getDeletedIds();
+        if (deletedIds.includes(newEntry.id)) {
+          const updatedDeleted = deletedIds.filter((id) => id !== newEntry.id);
+          this.saveDeletedIds(updatedDeleted);
+        }
         this.weightHistorySig.update((prev) => [newEntry, ...prev]);
       }),
     );
