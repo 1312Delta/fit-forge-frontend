@@ -75,6 +75,14 @@ import { DashboardService } from '../../core/services/dashboard.service';
       </div>
     </a>
 
+    <!-- Admin (only for admins) -->
+    @if (isAdmin()) {
+      <a routerLink="/admin" routerLinkActive="sb-active" class="sb-link sb-admin-link">
+        <span class="sb-icon">🛡️</span>
+        Admin
+      </a>
+    }
+
     <!-- Logout -->
     <button class="sb-logout" (click)="auth.logout()">↩ Cerrar sesión</button>
   `,
@@ -226,6 +234,16 @@ import { DashboardService } from '../../core/services/dashboard.service';
         color: var(--color-text);
       }
 
+      .sb-admin-link {
+        margin-top: 0.35rem;
+        color: var(--color-primary);
+      }
+
+      .sb-admin-link:hover,
+      .sb-admin-link.sb-active {
+        color: var(--color-primary);
+      }
+
       .sb-logout {
         width: 100%;
         margin-top: 0.5rem;
@@ -262,4 +280,5 @@ export class Sidebar {
   private readonly greeting = this.ds.getGreeting();
   readonly displayName = computed(() => this.greeting().userName);
   readonly initials = computed(() => this.displayName().slice(0, 2).toUpperCase());
+  readonly isAdmin = computed(() => this.auth.isAdmin());
 }

@@ -1,0 +1,137 @@
+.admin-container {
+  min-height: 100vh;
+  background-color: var(--color-background, #121212);
+  color: #fff;
+  padding-bottom: 4rem;
+}
+
+.text-muted-light {
+  color: #a0a0a0;
+}
+
+.dashboard-card {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #2c2c2c;
+}
+
+.section-label {
+  color: #a0a0a0;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.admin-header {
+  margin-top: 0.5rem;
+}
+
+.admin-badge {
+  background-color: #4ade80;
+  color: #0a0a0a;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  border-radius: 999px;
+  color: #a0a0a0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.admin-tab:hover {
+  background: #262626;
+  color: #fff;
+}
+
+.admin-tab.is-active {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.admin-tab-icon {
+  font-size: 1rem;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  color: #a0a0a0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.profile-control {
+  line-height: 1.2;
+  min-height: 42px;
+}
+
+.admin-table {
+  width: 100%;
+  color: #fff;
+  font-size: 0.88rem;
+  border-collapse: collapse;
+}
+
+.admin-table thead th {
+  text-align: left;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a0a0a0;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.admin-table tbody td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #232323;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:hover {
+  background: #232323;
+}
+
+.bg-success-soft {
+  background-color: rgba(74, 222, 128, 0.15);
+}
+
+.text-success {
+  color: #4ade80;
+}

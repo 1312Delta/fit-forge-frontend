@@ -1,0 +1,913 @@
+<div class="admin-container py-4">
+  <div class="container">
+    <!-- Header -->
+    <header class="admin-header mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="admin-badge">ADMIN</div>
+        <div>
+          <h1 class="display-6 fw-bold text-white mb-1">Panel de administración</h1>
+          <p class="text-muted-light mb-0">
+            Gestión de usuarios, ejercicios, rutinas, alimentos y dietas.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="admin-tabs">
+      @for (t of tabs; track t.id) {
+        <button
+          type="button"
+          class="admin-tab"
+          [class.is-active]="activeTab() === t.id"
+          (click)="setTab(t.id)"
+        >
+          <span class="admin-tab-icon">{{ t.icon }}</span>
+          {{ t.label }}
+        </button>
+      }
+    </nav>
+
+    @if (notice()) {
+      <div
+        class="alert shadow-sm rounded-3 border-0 mb-3"
+        [class.alert-success]="notice()!.kind === 'success'"
+        [class.alert-danger]="notice()!.kind === 'error'"
+      >
+        {{ notice()!.text }}
+      </div>
+    }
+
+    <!-- ─────────── USERS ─────────── -->
+    @if (activeTab() === 'users') {
+      <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="section-label mb-0">USUARIOS</h6>
+          <button class="btn btn-sm btn-outline-light" (click)="loadUsers(1)">Recargar</button>
+        </div>
+
+        @if (usersLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else if (usersError()) {
+          <div class="alert alert-danger shadow-sm rounded-3 border-0 mb-3">{{ usersError() }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Objetivo</th>
+                  <th>Creado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (u of users(); track u.id) {
+                  <tr>
+                    <td>{{ u.id }}</td>
+                    <td>&#64;{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.firstName }} {{ u.lastName }}</td>
+                    <td>
+                      <span
+                        class="badge"
+                        [class.bg-success-soft]="u.role === 'admin'"
+                        [class.text-success]="u.role === 'admin'"
+                        [class.bg-secondary]="u.role !== 'admin'"
+                      >
+                        {{ u.role }}
+                      </span>
+                    </td>
+                    <td>{{ u.goalType ?? '—' }}</td>
+                    <td>{{ u.createdAt | date: 'mediumDate' }}</td>
+                    <td class="text-end">
+                      @if (u.role === 'user') {
+                        <button
+                          class="btn btn-sm btn-outline-light me-1"
+                          (click)="changeRole(u, 'admin')"
+                        >
+                          Promover
+                        </button>
+                      } @else {
+                        <button
+                          class="btn btn-sm btn-outline-light me-1"
+                          (click)="changeRole(u, 'user')"
+                        >
+                          Degradar
+                        </button>
+                      }
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(u)">
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="text-center text-muted-light py-3">Sin usuarios</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted-light">Total: {{ usersTotal() }}</small>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-light" (click)="prevUsersPage()">‹</button>
+              <span class="text-muted-light align-self-center">Página {{ usersPage() }}</span>
+              <button class="btn btn-sm btn-outline-light" (click)="nextUsersPage()">›</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ─────────── EXERCISES ─────────── -->
+    @if (activeTab() === 'exercises') {
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">
+          {{ exerciseForm().id ? 'EDITAR EJERCICIO' : 'NUEVO EJERCICIO' }}
+        </h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >NOMBRE *
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="exerciseForm().name"
+                (ngModelChange)="updateExerciseField('name', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >GRUPO MUSCULAR
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="exerciseForm().muscleGroup"
+                (ngModelChange)="updateExerciseField('muscleGroup', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >EQUIPAMIENTO
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="exerciseForm().equipment"
+                (ngModelChange)="updateExerciseField('equipment', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >KCAL/MIN
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="exerciseForm().caloriesPerMin"
+                (ngModelChange)="updateExerciseField('caloriesPerMin', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 profile-field">
+            <label class="profile-label d-block"
+              >DESCRIPCIÓN
+              <textarea
+                rows="2"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="exerciseForm().description"
+                (ngModelChange)="updateExerciseField('description', $event)"
+              ></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-light" (click)="resetExerciseForm()">Limpiar</button>
+          <button class="btn btn-success px-4" (click)="saveExercise()">
+            {{ exerciseForm().id ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="section-label mb-0">CATÁLOGO DE EJERCICIOS</h6>
+          <button class="btn btn-sm btn-outline-light" (click)="loadExercises()">Recargar</button>
+        </div>
+
+        @if (exercisesLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else if (exercisesError()) {
+          <div class="alert alert-danger shadow-sm rounded-3 border-0">{{ exercisesError() }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Grupo</th>
+                  <th>Equipamiento</th>
+                  <th>Kcal/min</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (e of exercises(); track e.id) {
+                  <tr>
+                    <td>{{ e.id }}</td>
+                    <td>{{ e.name }}</td>
+                    <td>{{ e.muscleGroup ?? '—' }}</td>
+                    <td>{{ e.equipment ?? '—' }}</td>
+                    <td>{{ e.caloriesPerMin ?? '—' }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-light me-1" (click)="editExercise(e)">
+                        Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteExercise(e)">
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center text-muted-light py-3">Sin ejercicios</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ─────────── ROUTINES ─────────── -->
+    @if (activeTab() === 'routines') {
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">
+          {{ routineForm().id ? 'EDITAR RUTINA' : 'NUEVA RUTINA' }}
+        </h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >NOMBRE *
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineForm().name"
+                (ngModelChange)="updateRoutineField('name', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >DIFICULTAD
+              <select
+                class="form-select profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineForm().difficulty"
+                (ngModelChange)="updateRoutineField('difficulty', $event)"
+              >
+                @for (d of difficultyOptions; track d) {
+                  <option [value]="d">{{ d }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >OBJETIVO *
+              <select
+                class="form-select profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineForm().goalType"
+                (ngModelChange)="updateRoutineField('goalType', $event)"
+              >
+                @for (g of goalOptions; track g) {
+                  <option [value]="g">{{ g }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="col-12 profile-field">
+            <label class="profile-label d-block"
+              >DESCRIPCIÓN
+              <textarea
+                rows="2"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineForm().description"
+                (ngModelChange)="updateRoutineField('description', $event)"
+              ></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-light" (click)="resetRoutineForm()">Limpiar</button>
+          <button class="btn btn-success px-4" (click)="saveRoutine()">
+            {{ routineForm().id ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="section-label mb-0">RUTINAS</h6>
+          <button class="btn btn-sm btn-outline-light" (click)="loadRoutines()">Recargar</button>
+        </div>
+
+        @if (routinesLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else if (routinesError()) {
+          <div class="alert alert-danger shadow-sm rounded-3 border-0">{{ routinesError() }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Dificultad</th>
+                  <th>Objetivo</th>
+                  <th>Ejercicios</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of routines(); track r.id) {
+                  <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.name }}</td>
+                    <td>{{ r.difficulty }}</td>
+                    <td>{{ r.goalType ?? '—' }}</td>
+                    <td>{{ r.exerciseCount ?? '—' }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-light me-1" (click)="editRoutine(r)">
+                        Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteRoutine(r)">
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center text-muted-light py-3">Sin rutinas</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">AÑADIR EJERCICIO A RUTINA</h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >ROUTINE ID *
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseForm().routineId"
+                (ngModelChange)="updateRoutineExerciseForm('routineId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >EXERCISE ID *
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseForm().exerciseId"
+                (ngModelChange)="updateRoutineExerciseForm('exerciseId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >SERIES
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseForm().sets"
+                (ngModelChange)="updateRoutineExerciseForm('sets', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >REPS
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseForm().reps"
+                (ngModelChange)="updateRoutineExerciseForm('reps', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >ORDEN
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseForm().orderIndex"
+                (ngModelChange)="updateRoutineExerciseForm('orderIndex', $event)"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-success px-4" (click)="addRoutineExercise()">Añadir</button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">QUITAR EJERCICIO DE RUTINA</h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-4 profile-field">
+            <label class="profile-label d-block"
+              >ROUTINE ID
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseRemove().routineId"
+                (ngModelChange)="updateRoutineExerciseRemove('routineId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-4 profile-field">
+            <label class="profile-label d-block"
+              >ROUTINE-EXERCISE ID
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="routineExerciseRemove().reId"
+                (ngModelChange)="updateRoutineExerciseRemove('reId', $event)"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-outline-danger" (click)="removeRoutineExercise()">Eliminar</button>
+        </div>
+      </div>
+    }
+
+    <!-- ─────────── FOODS ─────────── -->
+    @if (activeTab() === 'foods') {
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">
+          {{ foodForm().id ? 'EDITAR ALIMENTO' : 'NUEVO ALIMENTO' }}
+        </h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >NOMBRE *
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().name"
+                (ngModelChange)="updateFoodField('name', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >MARCA
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().brand"
+                (ngModelChange)="updateFoodField('brand', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >KCAL/100g *
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().kcalPer100g"
+                (ngModelChange)="updateFoodField('kcalPer100g', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >PROTEÍNA (g)
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().proteinG"
+                (ngModelChange)="updateFoodField('proteinG', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >CARBOS (g)
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().carbsG"
+                (ngModelChange)="updateFoodField('carbsG', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >GRASAS (g)
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().fatG"
+                (ngModelChange)="updateFoodField('fatG', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >FIBRA (g)
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="foodForm().fiberG"
+                (ngModelChange)="updateFoodField('fiberG', $event)"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-light" (click)="resetFoodForm()">Limpiar</button>
+          <button class="btn btn-success px-4" (click)="saveFood()">
+            {{ foodForm().id ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <h6 class="section-label mb-0">CATÁLOGO DE ALIMENTOS</h6>
+          <div class="d-flex gap-2">
+            <input
+              type="text"
+              placeholder="Buscar…"
+              class="form-control form-control-sm bg-dark text-white border-secondary"
+              [ngModel]="foodsSearch()"
+              (ngModelChange)="setFoodsSearch($event)"
+              (keyup.enter)="searchFoods()"
+            />
+            <button class="btn btn-sm btn-outline-light" (click)="searchFoods()">Buscar</button>
+            <button class="btn btn-sm btn-outline-light" (click)="loadFoods(1)">Recargar</button>
+          </div>
+        </div>
+
+        @if (foodsLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else if (foodsError()) {
+          <div class="alert alert-danger shadow-sm rounded-3 border-0">{{ foodsError() }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Marca</th>
+                  <th>Kcal/100g</th>
+                  <th>P</th>
+                  <th>C</th>
+                  <th>G</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (f of foods(); track f.id) {
+                  <tr>
+                    <td>{{ f.id }}</td>
+                    <td>{{ f.name }}</td>
+                    <td>{{ f.brand ?? '—' }}</td>
+                    <td>{{ f.kcalPer100g }}</td>
+                    <td>{{ f.proteinG ?? '—' }}</td>
+                    <td>{{ f.carbsG ?? '—' }}</td>
+                    <td>{{ f.fatG ?? '—' }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-light me-1" (click)="editFood(f)">
+                        Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteFood(f)">
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="text-center text-muted-light py-3">Sin alimentos</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted-light">Total: {{ foodsTotal() }}</small>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-light" (click)="prevFoodsPage()">‹</button>
+              <span class="text-muted-light align-self-center">Página {{ foodsPage() }}</span>
+              <button class="btn btn-sm btn-outline-light" (click)="nextFoodsPage()">›</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ─────────── DIETS ─────────── -->
+    @if (activeTab() === 'diets') {
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">
+          {{ dietForm().id ? 'EDITAR DIETA' : 'NUEVA DIETA' }}
+        </h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-6 profile-field">
+            <label class="profile-label d-block"
+              >NOMBRE *
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="dietForm().name"
+                (ngModelChange)="updateDietField('name', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >KCAL/DÍA
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="dietForm().dailyKcal"
+                (ngModelChange)="updateDietField('dailyKcal', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >OBJETIVO *
+              <select
+                class="form-select profile-control bg-dark text-white border-secondary"
+                [ngModel]="dietForm().goalType"
+                (ngModelChange)="updateDietField('goalType', $event)"
+              >
+                @for (g of goalOptions; track g) {
+                  <option [value]="g">{{ g }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="col-12 profile-field">
+            <label class="profile-label d-block"
+              >DESCRIPCIÓN
+              <textarea
+                rows="2"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="dietForm().description"
+                (ngModelChange)="updateDietField('description', $event)"
+              ></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-light" (click)="resetDietForm()">Limpiar</button>
+          <button class="btn btn-success px-4" (click)="saveDiet()">
+            {{ dietForm().id ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="section-label mb-0">DIETAS</h6>
+          <button class="btn btn-sm btn-outline-light" (click)="loadDiets()">Recargar</button>
+        </div>
+
+        @if (dietsLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else if (dietsError()) {
+          <div class="alert alert-danger shadow-sm rounded-3 border-0">{{ dietsError() }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Objetivo</th>
+                  <th>Kcal/día</th>
+                  <th>Comidas</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of diets(); track d.id) {
+                  <tr>
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.name }}</td>
+                    <td>{{ d.goalType ?? '—' }}</td>
+                    <td>{{ d.dailyKcal ?? '—' }}</td>
+                    <td>{{ d.mealCount ?? '—' }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-light me-1" (click)="editDiet(d)">
+                        Editar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="deleteDiet(d)">
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center text-muted-light py-3">Sin dietas</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">AÑADIR COMIDA A DIETA</h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-2 profile-field">
+            <label class="profile-label d-block"
+              >DIET ID *
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealForm().dietId"
+                (ngModelChange)="updateMealField('dietId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-4 profile-field">
+            <label class="profile-label d-block"
+              >NOMBRE *
+              <input
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealForm().name"
+                (ngModelChange)="updateMealField('name', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >HORA (HH:MM)
+              <input
+                type="time"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealForm().mealTime"
+                (ngModelChange)="updateMealField('mealTime', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >DÍA SEMANA (1-7)
+              <input
+                type="number"
+                min="1"
+                max="7"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealForm().dayOfWeek"
+                (ngModelChange)="updateMealField('dayOfWeek', $event)"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-success px-4" (click)="addMeal()">Añadir comida</button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">ELIMINAR COMIDA</h6>
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-md-4 profile-field">
+            <label class="profile-label d-block"
+              >MEAL ID
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealDelete()"
+                (ngModelChange)="mealDelete.set($event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-auto">
+            <button class="btn btn-outline-danger" (click)="deleteMeal()">Eliminar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">AÑADIR ALIMENTO A COMIDA</h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >MEAL ID *
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealFoodForm().mealId"
+                (ngModelChange)="updateMealFoodForm('mealId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >FOOD ID *
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealFoodForm().foodId"
+                (ngModelChange)="updateMealFoodForm('foodId', $event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-3 profile-field">
+            <label class="profile-label d-block"
+              >CANTIDAD (g) *
+              <input
+                type="number"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealFoodForm().quantityG"
+                (ngModelChange)="updateMealFoodForm('quantityG', $event)"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-success px-4" (click)="addMealFood()">Añadir alimento</button>
+        </div>
+      </div>
+
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">ELIMINAR MEAL-FOOD</h6>
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-md-4 profile-field">
+            <label class="profile-label d-block"
+              >MEAL-FOOD ID
+              <input
+                type="number"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="mealFoodDelete()"
+                (ngModelChange)="mealFoodDelete.set($event)"
+              />
+            </label>
+          </div>
+          <div class="col-12 col-md-auto">
+            <button class="btn btn-outline-danger" (click)="removeMealFood()">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
