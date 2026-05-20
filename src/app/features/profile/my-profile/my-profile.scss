@@ -1,0 +1,113 @@
+.my-profile-container {
+  min-height: 100vh;
+  background-color: var(--color-background, #121212);
+  color: #fff;
+  padding-bottom: 4rem;
+}
+
+.text-muted-light {
+  color: #a0a0a0;
+}
+
+.dashboard-card {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #2c2c2c;
+}
+
+.section-label {
+  color: #a0a0a0;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+}
+
+.profile-header {
+  margin-top: 0.5rem;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #4ade80;
+  color: #0a0a0a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #a0a0a0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.profile-control {
+  height: 42px;
+  line-height: 1.2;
+}
+
+/* Read-only summary cards */
+.stat-cell {
+  padding: 0.5rem 0.75rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #a0a0a0;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+.account-key {
+  color: #a0a0a0;
+  font-size: 0.85rem;
+}
+
+.account-value {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.bg-success-soft {
+  background-color: rgba(74, 222, 128, 0.15);
+}
+
+.text-success {
+  color: #4ade80;
+}

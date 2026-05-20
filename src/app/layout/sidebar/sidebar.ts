@@ -68,12 +68,12 @@ import { DashboardService } from '../../core/services/dashboard.service';
     <div class="sb-divider"></div>
 
     <!-- User profile -->
-    <div class="sb-user">
+    <a routerLink="/profile" routerLinkActive="sb-active" class="sb-user">
       <div class="sb-avatar">{{ initials() }}</div>
       <div class="sb-user-info">
         <div class="sb-user-name">{{ displayName() }}</div>
       </div>
-    </div>
+    </a>
 
     <!-- Logout -->
     <button class="sb-logout" (click)="auth.logout()">↩ Cerrar sesión</button>
@@ -187,7 +187,22 @@ import { DashboardService } from '../../core/services/dashboard.service';
         display: flex;
         align-items: center;
         gap: 0.65rem;
-        padding: 0.35rem 0;
+        padding: 0.35rem 0.5rem;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+
+      .sb-user:hover {
+        background: var(--color-surface-2);
+      }
+
+      .sb-user.sb-active {
+        background: var(--color-surface-2);
       }
 
       .sb-avatar {

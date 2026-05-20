@@ -1,0 +1,257 @@
+<div class="my-profile-container py-4">
+  <div class="container">
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    } @else if (error() && !user()) {
+      <div class="alert alert-danger shadow-sm rounded-3 border-0">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error() }}
+      </div>
+    } @else if (user()) {
+      <!-- Header -->
+      <header class="profile-header mb-4 d-flex align-items-center gap-3">
+        <div class="profile-avatar">{{ initials() }}</div>
+        <div>
+          <h1 class="display-6 fw-bold text-white mb-1">Mi perfil</h1>
+          <p class="text-muted-light mb-0">&#64;{{ user()!.username }} · {{ user()!.email }}</p>
+        </div>
+      </header>
+
+      @if (error()) {
+        <div class="alert alert-danger shadow-sm rounded-3 border-0 mb-3">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error() }}
+        </div>
+      }
+      @if (success()) {
+        <div class="alert alert-success shadow-sm rounded-3 border-0 mb-3">
+          <i class="bi bi-check-circle-fill me-2"></i>Cambios guardados correctamente.
+        </div>
+      }
+
+      <form (ngSubmit)="save()" #profileForm="ngForm">
+        <!-- Datos personales -->
+        <div class="dashboard-card mb-4">
+          <h6 class="section-label">DATOS PERSONALES</h6>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6 profile-field">
+              <label for="firstName" class="profile-label">NOMBRE</label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().firstName"
+                (ngModelChange)="updateField('firstName', $event)"
+              />
+            </div>
+            <div class="col-12 col-md-6 profile-field">
+              <label for="lastName" class="profile-label">APELLIDOS</label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().lastName"
+                (ngModelChange)="updateField('lastName', $event)"
+              />
+            </div>
+            <div class="col-12 col-md-6 profile-field">
+              <label for="birthdate" class="profile-label">FECHA DE NACIMIENTO</label>
+              <input
+                id="birthdate"
+                name="birthdate"
+                type="date"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().birthdate"
+                (ngModelChange)="updateField('birthdate', $event)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Físico -->
+        <div class="dashboard-card mb-4">
+          <h6 class="section-label">FÍSICO</h6>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6 profile-field">
+              <label for="heightCm" class="profile-label">ALTURA (cm)</label>
+              <input
+                id="heightCm"
+                name="heightCm"
+                type="number"
+                min="50"
+                max="260"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().heightCm"
+                (ngModelChange)="updateField('heightCm', $event)"
+              />
+            </div>
+            <div class="col-12 col-md-6 profile-field">
+              <label for="currentWeightKg" class="profile-label">PESO ACTUAL (kg)</label>
+              <input
+                id="currentWeightKg"
+                name="currentWeightKg"
+                type="number"
+                min="20"
+                max="400"
+                step="0.1"
+                class="form-control profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().currentWeightKg"
+                (ngModelChange)="updateField('currentWeightKg', $event)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Objetivo -->
+        <div class="dashboard-card mb-4">
+          <h6 class="section-label">OBJETIVO Y ACTIVIDAD</h6>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6 profile-field">
+              <label for="goalType" class="profile-label">OBJETIVO</label>
+              <select
+                id="goalType"
+                name="goalType"
+                class="form-select profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().goalType"
+                (ngModelChange)="updateField('goalType', $event)"
+              >
+                <option value="" disabled>Selecciona un objetivo</option>
+                @for (g of goalOptions; track g) {
+                  <option [value]="g">{{ goalLabel(g) }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12 col-md-6 profile-field">
+              <label for="activityLevel" class="profile-label">NIVEL DE ACTIVIDAD</label>
+              <select
+                id="activityLevel"
+                name="activityLevel"
+                class="form-select profile-control bg-dark text-white border-secondary"
+                [ngModel]="form().activityLevel"
+                (ngModelChange)="updateField('activityLevel', $event)"
+              >
+                <option value="">Sin especificar</option>
+                @for (a of activityOptions; track a) {
+                  <option [value]="a">{{ activityLabel(a) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex justify-content-end mb-4">
+          <button type="submit" class="btn btn-success px-4" [disabled]="saving()">
+            {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- Resumen nutricional (read-only) -->
+      <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="section-label mb-0">RESUMEN NUTRICIONAL</h6>
+          @if (user()!.nutritionCalculatedAt) {
+            <span class="text-muted-light small">
+              Actualizado {{ user()!.nutritionCalculatedAt | date: 'mediumDate' : '' : 'es' }}
+            </span>
+          }
+        </div>
+
+        @if (hasNutritionSnapshot()) {
+          <div class="row g-3">
+            @if (user()!.dailyKcal !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">KCAL/DÍA</div>
+                <div class="stat-value text-success">{{ user()!.dailyKcal | number }}</div>
+              </div>
+            }
+            @if (user()!.dailyProteinG !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">PROTEÍNA</div>
+                <div class="stat-value">{{ user()!.dailyProteinG | number: '1.0-0' }}g</div>
+              </div>
+            }
+            @if (user()!.dailyCarbsG !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">CARBOS</div>
+                <div class="stat-value">{{ user()!.dailyCarbsG | number: '1.0-0' }}g</div>
+              </div>
+            }
+            @if (user()!.dailyFatG !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">GRASAS</div>
+                <div class="stat-value">{{ user()!.dailyFatG | number: '1.0-0' }}g</div>
+              </div>
+            }
+            @if (user()!.bmi !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">IMC</div>
+                <div class="stat-value">{{ user()!.bmi | number: '1.0-1' }}</div>
+              </div>
+            }
+            @if (user()!.bmr !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">BMR</div>
+                <div class="stat-value">{{ user()!.bmr | number }}</div>
+              </div>
+            }
+            @if (user()!.tdee !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">TDEE</div>
+                <div class="stat-value">{{ user()!.tdee | number }}</div>
+              </div>
+            }
+            @if (user()!.bodyFatPercent !== null) {
+              <div class="col-6 col-md-3 stat-cell">
+                <div class="stat-label">% GRASA</div>
+                <div class="stat-value">{{ user()!.bodyFatPercent | number: '1.0-1' }}%</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-muted-light mb-3">Aún no has calculado tus objetivos nutricionales.</p>
+          <a routerLink="/nutrition" class="btn btn-outline-light"> Calcular ahora </a>
+        }
+      </div>
+
+      <!-- Cuenta -->
+      <div class="dashboard-card mb-4">
+        <h6 class="section-label">CUENTA</h6>
+
+        <div class="account-row">
+          <span class="account-key">Usuario</span>
+          <span class="account-value">&#64;{{ user()!.username }}</span>
+        </div>
+        <div class="account-row">
+          <span class="account-key">Email</span>
+          <span class="account-value">{{ user()!.email }}</span>
+        </div>
+        <div class="account-row">
+          <span class="account-key">Rol</span>
+          <span class="account-value">
+            @if (user()!.role === 'ROLE_ADMIN') {
+              <span class="badge bg-success-soft text-success">Administrador</span>
+            } @else {
+              Usuario
+            }
+          </span>
+        </div>
+        <div class="account-row">
+          <span class="account-key">Miembro desde</span>
+          <span class="account-value">
+            {{ user()!.createdAt | date: 'longDate' : '' : 'es' }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</div>
